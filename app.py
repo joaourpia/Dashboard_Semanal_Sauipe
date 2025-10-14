@@ -74,7 +74,7 @@ st.markdown("""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 01/10 a 12/10</p>
+    <p class="periodo-value">Semana 01/10 a 13/10</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -119,7 +119,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 01/10 a 12/10</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 01/10 a 13/10</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -162,7 +162,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 01/10 a 12/10</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 01/10 a 13/10</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -206,9 +206,9 @@ if st.session_state.current_tab == "Visão Geral":
 
     st.markdown("""
     <div class="obs-box">
-    <b>Observações Importantes - 01/10 a 12/10</b>
+    <b>Observações Importantes - 01/10 a 13/10</b>
     <ul>
-      <li><b>SLA:</b> A redução na diária de eventos (de R$ 80,00 para R$ 57,37) impactou diretamente a performance, gerando dificuldades nas entregas do VO. O restabelecimento da diária para R$ 80,00 foi a chave para a recuperação imediata, elevando a performance de entrega para acima de 97%, comprovando a eficácia do incentivo financeiro.).</li>
+      <li><b>SLA:</b> Excelente performance  da SLA de 98,8% entre 01 e 13/10/2025, e performance de diárias 18% acima do solicitado, impulsionadas pela manutenção da diária em R$ 80,00 e pela premiação de assiduidade (par de ingressos e gratificação de R$ 80,00).</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -277,10 +277,10 @@ elif st.session_state.current_tab == "Análise SLA":
     # Bloco azul - Contexto Evento VO
     st.markdown("""
     <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
-    <b>Contexto do Evento VO (18/09)</b><br>
-    O evento de encerramento do VO ocorreu em <b>18/09/2025</b>, porém as solicitações chegaram apenas em <b>15/09/2025</b>, deixando apenas <b>3 dias</b> para contratação, muito abaixo do SLA de 10 dias.<br>
-    Apesar dos esforços da equipe, não foi possível entregar 13 temporários dentro desse prazo extremamente curto. Excluindo esse evento excepcional, a taxa de cumprimento do SLA seria de <b style="color:#205891;">81.98%</b>.
-    </div>
+    <b>Contexto SLA</b><br>
+    <li><b>Entregas:</b> Performance de 98,8% entre 01 e 13/10/2025, com apenas um temporário não entregue no evento do VO; mesmo com 48 solicitações fora do prazo (13 a 22/10/2025), entregamos 17 temporários acima do solicitado.</li>
+.<br>
+    
     """, unsafe_allow_html=True)
 
 # =========== DIÁRIAS ============
@@ -312,7 +312,7 @@ elif st.session_state.current_tab == "Diárias":
     # Gráfico de barras
     fig_barras = go.Figure()
     fig_barras.add_trace(go.Bar(
-        x=["01/10 a 12/10"],
+        x=["01/10 a 13/10"],
         y=[solicitadas],
         name="Solicitadas",
         marker=dict(color="#FFA500"),
@@ -320,7 +320,7 @@ elif st.session_state.current_tab == "Diárias":
         textposition="outside"
     ))
     fig_barras.add_trace(go.Bar(
-        x=["01/10 a 12/10"],
+        x=["01/10 a 13/10"],
         y=[entregues],
         name="Entregues",
         marker=dict(color="#23B26D"),
@@ -353,9 +353,8 @@ elif st.session_state.current_tab == "Diárias":
     <div class="diarias-motivos">
       <div class="diarias-motivos-title">Motivos para Diárias Acima do Solicitado</div>
       <ol style="margin-top:0.1em;margin-bottom:0.1em;">
-        <li>Alguns temporários foram enviados para área sem STH (Solicitação de Trabalho em Horário especial).</li>
         <li>Algumas STHs estavam vencidas, mas os temporários continuaram trabalhando.</li>
-        <li>Nos eventos de segunda no VO, entregamos temporários acima das solicitações para compensar o período em que estávamos com diária mais baixa.</li>
+        <li>No dia 13/10/2025, entregamos 17 temporários a mais, referente ao periodo do pedido de 13/10 a 22/10 .</li>
       </ol>
     </div>
     """, unsafe_allow_html=True)
@@ -372,7 +371,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (Março - Setembro)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 13/10)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -420,7 +419,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (Janeiro - Setembro)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01/10 a 13/10)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -482,8 +481,8 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#8593; Pontos Positivos</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Melhoria consistente na taxa de diárias desde março</li>
-                <li>Taxa de SLA de setembro (73,39%) mantém-se acima da média histórica considerando o evento excepcional</li>
+                <li>Melhoria consistente na taxa de diárias</li>
+                <li>Taxa de SLA de setembro (98,8%) superando nossa média histórica</li>
                 <li>Superação das diárias solicitadas demonstra comprometimento</li>
             </ul>
         </div>
@@ -492,10 +491,9 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#9888; Pontos de Atenção</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Necessidade de antecedência mínima para eventos especiais</li>
+                <li>Necessidade de antecedência mínima para eventos especiais, onde tivemos um grande desafio de entregar 48 temporários</li>
                 <li>Controle mais rigoroso de STHs vencidas</li>
-                <li>Padronização do envio de temporários conforme solicitações</li>
-            </ul>
+                            </ul>
         </div>
     </div>
 </div>
