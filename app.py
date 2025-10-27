@@ -89,7 +89,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 14/10 a 20/10</p>
+    <p class="periodo-value">Semana 21/10 a 27/10</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 14/10 a 20/10</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 21/10 a 27/10</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -177,7 +177,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 14/10 a 20/10</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 21/10 a 27/10</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -221,9 +221,9 @@ if st.session_state.current_tab == "Visão Geral":
 
     st.markdown("""
     <div class="obs-box">
-    <b>Observações Importantes - 14/10 a 20/10</b>
+    <b>Observações Importantes - 21/10 a 27/10</b>
     <ul>
-      <li><b>SLA:</b> Excelente performance  da SLA de 100% entre 14 a 20/10/2025, e performance de diárias 18% acima do solicitado, impulsionadas pela manutenção da diária em R$ 80,00 e pela premiação de assiduidade (par de ingressos e gratificação de R$ 80,00).</li>
+      <li><b>SLA:</b> Excelente performance  da SLA de 100% entre 21 a 27/10, e performance de diárias 36% acima do solicitado, impulsionadas pela manutenção da diária em R$ 80,00 e pela premiação de assiduidade (par de ingressos e gratificação de R$ 80,00).</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -293,7 +293,7 @@ elif st.session_state.current_tab == "Análise SLA":
     st.markdown("""
     <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
     <b>Contexto SLA</b><br>
-    <li><b>Entregas:</b> Performance de 100% entre 14 e 20/10/2025, onde recebemos 15 solicitações e entregamos as 15.</li> <br>
+    <li><b>Entregas:</b> Performance de 100% entre 21 a 27/10/2025, onde recebemos 21 solicitações e entregamos as 21.</li> <br>
     
     """, unsafe_allow_html=True)
 
@@ -326,7 +326,7 @@ elif st.session_state.current_tab == "Diárias":
     # Gráfico de barras
     fig_barras = go.Figure()
     fig_barras.add_trace(go.Bar(
-        x=["14/10 a 20/10"],
+        x=["21/10 a 27/10"],
         y=[solicitadas],
         name="Solicitadas",
         marker=dict(color="#FFA500"),
@@ -385,7 +385,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 20/10)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01/10 a 27/10)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -433,7 +433,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (14/10 a 20/10)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01/10 a 27/10)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -496,7 +496,7 @@ if st.session_state.current_tab == "Histórico":
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
                 <li>Melhoria consistente na taxa de diárias</li>
-                <li>Taxa de SLA de outubro (01 a 20/10/2025) com média de 99,5% superando nossa média histórica</li>
+                <li>Taxa de SLA de outubro (01 a 27/10/2025) com média de 99,6% superando nossa média histórica</li>
                 <li>Superação das diárias solicitadas demonstra comprometimento e sucessos nas ações para reduzir absenteísmo</li>
             </ul>
         </div>
