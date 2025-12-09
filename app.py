@@ -84,12 +84,12 @@ st.markdown(f"""
 </div>
 <div class="dashboard-header">
   <div class="header-left">
-    <h1>Dashboard Semanal Novembro 2025</h1>
+    <h1>Dashboard Semanal Dezembro 2025</h1>
     <p>Relatório de Contratação de Temporários - Mendes RH</p>
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 18 a 24/11
+    <p class="periodo-value">Semana 01 a 08/12
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 18 a 24/11</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 1 a 08/12</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -177,7 +177,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 18 a 24/11</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 1 a 08/12</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -223,7 +223,7 @@ if st.session_state.current_tab == "Visão Geral":
     <div class="obs-box">
     <b>Observações Importantes - 18 a 24/11</b>
     <ul>
-      <li><b>SLA:</b> Excelente performance da SLA de 100% entre 18 a 24/11, mesmo com o grande desafio de concorrer com o Caldas Country. Estamos com uma média de entrega de 01 a 24/11 de 99,13%, e performance de diárias 19% acima do solicitado. </li>
+      <li><b>SLA:</b> Excelente performance da SLA de 100% entre 1 a 08/12, mantendo a média dos ultimos dois meses. O mesmo se aplica a quantidade de diarias entregues nesse periodo, onde a entrega foi de 5,95% acima do solicitado.</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -293,7 +293,7 @@ elif st.session_state.current_tab == "Análise SLA":
     st.markdown("""
     <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
     <b>Contexto SLA</b><br>
-    <li><b>Entregas:</b> Performance de 100% entre 18 a 24/11/2025, onde recebemos 108 solicitações e entregamos todas elas.</li> <br>
+    <li><b>Entregas:</b> Performance de 100% entre 01 a 08/12/2025, onde recebemos 36 solicitações e entregamos todas elas.</li> <br>
                     
     """, unsafe_allow_html=True)
 
@@ -357,7 +357,7 @@ elif st.session_state.current_tab == "Diárias":
     st.markdown(f"""
     <div class="diarias-card-sucesso">
       <b>Desempenho Excepcional</b><br>
-      No periodo de 18 a 24/11/2025, superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença positiva de <b style="color:#12bb26;">+{saldo} diárias</b>.<br>
+      No periodo de 01 a 08/12/2025, superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença positiva de <b style="color:#12bb26;">+{saldo} diárias</b>.<br>
       Taxa de atendimento: <b>{taxa:.2f}%</b>.
     </div>
     """, unsafe_allow_html=True)
@@ -384,7 +384,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 24/11)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 08/12)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -432,7 +432,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 24/11)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 08/12)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -494,8 +494,7 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#8593; Pontos Positivos</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Melhoria consistente na taxa de diárias, mantendo a média de outubro que foi a nossa melhor média de entrega.</li>
-                <li>Taxa de SLA do periodo de 11 a 24/11, periodo esse com os feriados do dia 15 e 20/11, com forte concorrência do Caldas Country e mesmo assim fizemos uma entrega de 100%, superando nossa meta acima de 96%</li>
+                <li>Melhoria consistente na taxa de diárias, mantendo a média dos meses de setembro a novembro.</li>
                 <li>Superação das diárias solicitadas demonstra comprometimento e sucessos nas ações para reduzir absenteísmo</li>
             </ul>
         </div>
