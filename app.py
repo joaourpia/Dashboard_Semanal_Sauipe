@@ -221,7 +221,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     st.markdown("""
     <div class="obs-box">
-    <b>Observações Importantes - 18 a 24/11</b>
+    <b>Observações Importantes - 01 a 08/12</b>
     <ul>
       <li><b>SLA:</b> Excelente performance da SLA de 100% entre 1 a 08/12, mantendo a média dos ultimos dois meses. O mesmo se aplica a quantidade de diarias entregues nesse periodo, onde a entrega foi de 5,95% acima do solicitado.</li>
     </ul>
@@ -326,7 +326,7 @@ elif st.session_state.current_tab == "Diárias":
     # Gráfico de barras
     fig_barras = go.Figure()
     fig_barras.add_trace(go.Bar(
-        x=["18 a 24/11"],
+        x=["01 a 08/12"],
         y=[solicitadas],
         name="Solicitadas",
         marker=dict(color="#FFA500"),
