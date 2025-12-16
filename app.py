@@ -89,7 +89,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 01 a 08/12
+    <p class="periodo-value">Semana 09 a 15/12
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 1 a 08/12</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 9 a 15/12</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -177,7 +177,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 1 a 08/12</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 9 a 15/12</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -213,7 +213,7 @@ if st.session_state.current_tab == "Visão Geral":
         st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
 
         st.markdown(
-            f"""<div class='goal-box'>✅ Superamos a meta! Entregamos {saldo} diárias a mais que o solicitado ({diaria_percent:.2f}%)</div>""",
+            f"""<div class='goal-box'>✅ Não superamos a meta! Entregamos {saldo} diárias a menos que o solicitado ({diaria_percent:.2f}%)</div>""",
             unsafe_allow_html=True
         )
         st.markdown('</div>', unsafe_allow_html=True)
@@ -221,9 +221,10 @@ if st.session_state.current_tab == "Visão Geral":
 
     st.markdown("""
     <div class="obs-box">
-    <b>Observações Importantes - 01 a 08/12</b>
+    <b>Observações Importantes - 09 a 15/12</b>
     <ul>
-      <li><b>SLA:</b> Excelente performance da SLA de 100% entre 1 a 08/12, mantendo a média dos ultimos dois meses. O mesmo se aplica a quantidade de diarias entregues nesse periodo, onde a entrega foi de 5,95% acima do solicitado.</li>
+      <li><b>SLA:</b> SLA: 92,9% no período (09–15/12), com queda vs. semanas anteriores (detalhes na aba SLA).
+Volume: diárias entregues 11,47% abaixo do solicitado (detalhes na aba Diárias).</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -293,7 +294,7 @@ elif st.session_state.current_tab == "Análise SLA":
     st.markdown("""
     <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
     <b>Contexto SLA</b><br>
-    <li><b>Entregas:</b> Performance de 100% entre 01 a 08/12/2025, onde recebemos 36 solicitações e entregamos todas elas.</li> <br>
+    <li><b>Entregas:</b> Performance de 92,9% entre 09 a 15/12/2025, onde recebemos 42 solicitações e entregamos 39. Tivemos dificuldades em fechar duas vagas de Atendentes de Portaria e uma de Padeiro.</li> <br>
                     
     """, unsafe_allow_html=True)
 
@@ -326,7 +327,7 @@ elif st.session_state.current_tab == "Diárias":
     # Gráfico de barras
     fig_barras = go.Figure()
     fig_barras.add_trace(go.Bar(
-        x=["01 a 08/12"],
+        x=["09 a 15/12"],
         y=[solicitadas],
         name="Solicitadas",
         marker=dict(color="#FFA500"),
@@ -356,8 +357,8 @@ elif st.session_state.current_tab == "Diárias":
     # Bloco verde sucesso
     st.markdown(f"""
     <div class="diarias-card-sucesso">
-      <b>Desempenho Excepcional</b><br>
-      No periodo de 01 a 08/12/2025, superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença positiva de <b style="color:#12bb26;">+{saldo} diárias</b>.<br>
+      <b>Desempenho abaixo</b><br>
+      No periodo de 09 a 15/12/2025, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
       Taxa de atendimento: <b>{taxa:.2f}%</b>.
     </div>
     """, unsafe_allow_html=True)
@@ -365,9 +366,9 @@ elif st.session_state.current_tab == "Diárias":
     # Bloco laranja motivos
     st.markdown("""
     <div class="diarias-motivos">
-      <div class="diarias-motivos-title">Motivos para Diárias Acima do Solicitado</div>
+      <div class="diarias-motivos-title">Motivos para Diárias abaixo do Solicitado</div>
       <ol style="margin-top:0.1em;margin-bottom:0.1em;">
-        <li>Algumas STHs estavam vencidas, mas os temporários continuaram trabalhando.</li>
+        <li>A semana foi marcada por desistências e alto volume de faltas. No total, foram 78 ocorrências considerando os dois motivos.</li>
             </ol>
     </div>
     """, unsafe_allow_html=True)
@@ -384,7 +385,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 08/12)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 15/12)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -432,7 +433,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 08/12)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 15/12)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -494,9 +495,8 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#8593; Pontos Positivos</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Melhoria consistente na taxa de diárias, mantendo a média dos meses de setembro a novembro.</li>
-                <li>Superação das diárias solicitadas demonstra comprometimento e sucessos nas ações para reduzir absenteísmo</li>
-            </ul>
+                <li>Mesmo com uma queda nos numeros dessa semana, ainda estamos com uma média de 96,45% nos primeiros 15 dias.</li>
+                </ul>
         </div>
         <div style="flex:1;min-width:260px;background:#fff;border-radius:9px;padding:18px 18px 15px 18px;margin-bottom:8px;box-shadow:0 1px 5px #0001;">
             <div style="color:#FFA500;font-weight:700;margin-bottom:3px;">
@@ -504,6 +504,7 @@ if st.session_state.current_tab == "Histórico":
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
                 <li>Controle mais rigoroso de STHs vencidas</li>
+                <li>Há aumento de desistências e negativas. O principal ponto informado por candidatos é a não aceitação de registro em carteira (mesmo em contrato temporário). Também observamos desistências na etapa de efetivação. Motivos associados: diária de R$ 80,00 em eventos menores, distância, transporte e preocupação com benefícios governamentais.</li>
                 </ul>
         </div>
     </div>
