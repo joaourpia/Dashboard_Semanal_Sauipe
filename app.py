@@ -89,7 +89,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 16 a 21/12
+    <p class="periodo-value">Semana 22 a 28/12
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 16 a 21/12</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 22 a 28/12</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -177,7 +177,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 16 a 21/12</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 22 a 28/12</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -221,10 +221,10 @@ if st.session_state.current_tab == "Visão Geral":
 
     st.markdown("""
     <div class="obs-box">
-    <b>Observações Importantes - 16 a 21/12</b>
+    <b>Observações Importantes - 22 a 28/12</b>
     <ul>
-      <li><b>SLA:</b> SLA: 92,9% no período (16–21/12), com queda vs. semanas anteriores (detalhes na aba SLA).
-Volume: diárias entregues 3,26% abaixo do solicitado (detalhes na aba Diárias).</li>
+      <li></b> SLA: 55,4% no período (22–28/12), com queda vs. semanas anteriores (detalhes na aba SLA).
+Volume: diárias entregues 34,37% abaixo do solicitado (detalhes na aba Diárias).</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -294,7 +294,11 @@ elif st.session_state.current_tab == "Análise SLA":
     st.markdown("""
     <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
     <b>Contexto SLA</b><br>
-    <li><b>Entregas:</b> Performance de 92,9% entre 16 a 21/12/2025, onde recebemos 28 solicitações e entregamos 26. Tivemos dificuldades em fechar duas vagas de Auxiliar de Lavanderia.</li> <br>
+    <li><b>Atraso Orçamentário:</b> Demora na liberação de headcount para Garçom e Ajudante impactou o tempo de resposta.</li> <br>
+    <li><b>Competitividade:</b> Valor da diária inferior à média praticada na região de Caldas, dificultando a atração.</li> <br>
+    <li><b>Baixa Conversão:</b> Absenteísmo de 70% nas entrevistas/treinamentos (convocação de 35/dia para 30% de presença). Baixa efetividade do SINE e indisponibilidade da base de temporários de Julho.</li> <br>
+    <li><b>Perfil:</b> Resistência do mercado local a contratos formais/efetivação em detrimento de modelos informais.</li> <br>
+ 
                     
     """, unsafe_allow_html=True)
 
@@ -358,7 +362,7 @@ elif st.session_state.current_tab == "Diárias":
     st.markdown(f"""
     <div class="diarias-card-sucesso">
       <b>Desempenho abaixo</b><br>
-      No periodo de 09 a 15/12/2025, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
+      No periodo de  22 a 28/12/2025, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
       Taxa de atendimento: <b>{taxa:.2f}%</b>.
     </div>
     """, unsafe_allow_html=True)
@@ -368,7 +372,7 @@ elif st.session_state.current_tab == "Diárias":
     <div class="diarias-motivos">
       <div class="diarias-motivos-title">Motivos para Diárias abaixo do Solicitado</div>
       <ol style="margin-top:0.1em;margin-bottom:0.1em;">
-        <li>A semana foi marcada por desistências e alto volume de faltas. No total, foram 78 ocorrências considerando os dois motivos.</li>
+        <li>A semana foi marcada por desistências e taxa de SLA muito abaixo do esperado, impactando diretamente na quantidade de diarias entregues.</li>
             </ol>
     </div>
     """, unsafe_allow_html=True)
@@ -385,7 +389,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 21/12)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 28/12)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -433,7 +437,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 21/12)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 28/12)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -495,7 +499,7 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#8593; Pontos Positivos</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Mesmo com uma queda nos numeros dessa semana, ainda estamos com uma média de 95,26% nas primeiras  três Semanas.</li>
+                <li>Mesmo com uma queda nos numeros dessa semana, ainda estamos com uma média de 85,35% no periodo de 01 a 28/12/2025, mesmo abaixo do objetivo de entrega acima de 95%, ainda estamos com média acima do primeiro semestre e ainda temos tempo de recuperar nas entregas de reveillon.</li>
                 </ul>
         </div>
         <div style="flex:1;min-width:260px;background:#fff;border-radius:9px;padding:18px 18px 15px 18px;margin-bottom:8px;box-shadow:0 1px 5px #0001;">
