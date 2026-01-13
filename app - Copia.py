@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import base64
 
 st.set_page_config(page_title="Dashboard Operacional", layout="wide")
 
@@ -67,6 +66,8 @@ div[data-testid="stHorizontalBlock"] > div {margin-bottom: -8px;}
 """, unsafe_allow_html=True)
 
 # ------------ Cabeçalho do Dashboard --------------
+import base64
+
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
@@ -94,14 +95,8 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ------------ Tabs horizontais --------------
-# ALTERAÇÃO: Removidas as abas "Visão Geral" e "Análise SLA"
-tab_names = ["Diárias", "Histórico"]
-
+tab_names = ["Visão Geral", "Análise SLA", "Diárias", "Histórico"]
 if "current_tab" not in st.session_state:
-    st.session_state.current_tab = tab_names[0]
-
-# Garante que se a sessão estiver com uma aba antiga removida, volta para a primeira
-if st.session_state.current_tab not in tab_names:
     st.session_state.current_tab = tab_names[0]
 
 def set_tab(tab):
@@ -118,8 +113,197 @@ for i, tab in enumerate(tab_names):
         unsafe_allow_html=True,
     )
 
+# =========== VISÃO GERAL ============
+if st.session_state.current_tab == "Visão Geral":
+    sla = pd.read_csv('dados/SLA.csv', sep=';', decimal=',', encoding='latin1')
+    pedidos = pd.read_csv('dados/ANALISE_PEDIDO.csv', sep=';', decimal=',', encoding='latin1')
+
+    sla_percent = sla['taxa'].iloc[0] * 100
+    diaria_val = pedidos['Taxa'].iloc[0]
+    diaria_percent = float(str(diaria_val).replace(",", ".").replace("%", "")) if "%" in str(diaria_val) else float(diaria_val) * 100
+
+    st.markdown(f"""
+    <div class="kpi-row">
+      <div class="kpi-card kpi-blue"><span class="kpi-title">Total de Pedidos</span><span class="kpi-val">{sla['Solicitado'].iloc[0]}</span></div>
+      <div class="kpi-card kpi-green"><span class="kpi-title">Taxa SLA</span><span class="kpi-val">{sla_percent:.1f}%</span></div>
+      <div class="kpi-card kpi-purple"><span class="kpi-title">Diárias Entregues</span><span class="kpi-val">{pedidos['Entregue'].iloc[0]}</span></div>
+      <div class="kpi-card kpi-orange"><span class="kpi-title">Taxa Diárias</span><span class="kpi-val">{diaria_percent:.2f}%</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_pie, col_bar = st.columns(2, gap="medium")
+    with col_pie:
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 01 a 12/01/2026</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-content">', unsafe_allow_html=True)
+
+        no_prazo = sla["No_prazo"].iloc[0]
+        fora_prazo = sla["Fora_prazo"].iloc[0]
+        pie_labels = ["No Prazo", "Fora do Prazo"]
+        pie_vals = [no_prazo, fora_prazo]
+        pie_colors = ['#2266ee', '#f65054']
+
+        fig_pie = px.pie(
+            values=pie_vals,
+            names=pie_labels,
+            hole=0.40,
+            color_discrete_sequence=pie_colors
+        )
+        fig_pie.update_traces(
+            textinfo="percent",
+            textposition="inside",
+            textfont=dict(size=14, color="#ffffff"),
+            marker=dict(line=dict(color='#ffffff', width=2)),
+            pull=[0.02, 0.02]
+        )
+        fig_pie.update_layout(
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.2,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=10, color="#1a1a1a")
+            ),
+            margin=dict(l=5, r=5, t=5, b=5),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=180
+        )
+        st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar":False})
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_bar:
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 01 a 12/01/2026</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-content">', unsafe_allow_html=True)
+        solicitadas = pedidos.Solicitado.iloc[0]
+        entregues = pedidos.Entregue.iloc[0]
+        saldo = entregues - solicitadas
+
+        comp_df = pd.DataFrame({"Tipo": ["Solicitadas", "Entregues"], "Qtd": [solicitadas, entregues]})
+        fig_bar = px.bar(
+            comp_df, x="Tipo", y="Qtd", text_auto='.0f',
+            color="Tipo", color_discrete_map={"Solicitadas":"#FFA500","Entregues":"#23B26D"}
+        )
+        fig_bar.update_traces(
+    texttemplate='<b>%{y}</b>',
+    textposition='inside',  # <- Aqui está a mudança!
+    textfont=dict(size=14, color="#fff")   # Recomendo cor clara para melhor contraste dentro da barra!
+)
+        fig_bar.update_layout(
+            showlegend=False,
+            xaxis=dict(
+                title="",
+                tickfont=dict(size=11, color="#1a1a1a")
+            ),
+            yaxis=dict(
+                title="",
+                showticklabels=True,
+                tickfont=dict(size=9, color="#1a1a1a"),
+                range=[0, max(solicitadas, entregues) * 1.15]
+            ),
+            margin=dict(l=12, r=12, t=8, b=8),
+            height=150,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)"
+        )
+        st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
+
+        st.markdown(
+            f"""<div class='goal-box'>✅ Não superamos a meta! Entregamos {saldo} diárias a menos que o solicitado ({diaria_percent:.2f}%)</div>""",
+            unsafe_allow_html=True
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="obs-box">
+    <b>Observações Importantes - 01 a 12/01/2026</b>
+    <ul>
+      <li></b> SLA: 65,1% no período (01 a 12/01/2026), com queda vs. semanas anteriores (detalhes na aba SLA).
+Volume: diárias entregues 19,16% abaixo do solicitado (detalhes na aba Diárias).</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+# =========== ANÁLISE SLA ============
+elif st.session_state.current_tab == "Análise SLA":
+    sla = pd.read_csv('dados/SLA.csv', sep=';', decimal=',', encoding='latin1')
+    total = int(sla['Solicitado'].iloc[0])
+    dentro = int(sla['No_prazo'].iloc[0])
+    fora = int(sla['Fora_prazo'].iloc[0])
+    perc_dentro = dentro / total * 100
+    perc_fora = fora / total * 100
+
+    # KPIs Análise SLA
+    st.markdown(f"""
+    <div class="kpi-row">
+      <div class="kpi-card kpi-blue">
+        <span class="kpi-title">Total de Solicitações</span>
+        <span class="kpi-val">{total}</span>
+      </div>
+      <div class="kpi-card kpi-green">
+        <span class="kpi-title">Dentro do Prazo</span>
+        <span class="kpi-val">{dentro}</span>
+        <span style="font-size:0.92em;color:#e9ffe1;margin-left:2px;">{perc_dentro:.2f}% do total</span>
+      </div>
+      <div class="kpi-card kpi-orange">
+        <span class="kpi-title">Fora do Prazo</span>
+        <span class="kpi-val">{fora}</span>
+        <span style="font-size:0.92em;color:#fffbe5;margin-left:2px;">{perc_fora:.2f}% do total</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Indicador Circular (Gauge)
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number+delta",
+        value = perc_dentro,
+        delta = {'reference': 100, 'increasing': {'color': "#ff7927"}, 'decreasing': {'color': "#23B26D"}},
+        number = {'suffix': " %", 'font': {'size': 32}},
+        title = {'text': "SLA Cumprido (%)", 'font': {'size': 17}},
+        gauge = {
+            'axis': {'range': [0, 100], 'tickwidth': 2},
+            'bar': {'color': "#23B26D"},
+            'bgcolor': "#eaeaee",
+            'steps': [
+                {'range': [0, perc_dentro], 'color': "#23B26D"},
+                {'range': [perc_dentro, 100], 'color': "#ffebdf"},
+            ],
+            'threshold': {
+                'line': {'color': "#FF7927", 'width': 4},
+                'thickness': 0.7,
+                'value': perc_dentro
+            }
+        }
+    ))
+    fig.update_layout(
+        height=220,
+        margin=dict(l=22, r=22, t=22, b=20),
+        paper_bgcolor="#f6f9fd",
+        font=dict(size=15)
+    )
+    st.markdown('<div class="graph-container">', unsafe_allow_html=True)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Bloco azul - Contexto Evento VO
+    st.markdown("""
+    <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
+    <b>Contexto SLA</b><br>
+    <li><b>STHS Complicadas:</b> Demanda de 10 camareiras aos sabados e domingos com baixissima aderência e 3 vagas de Monitor de Lazer que o gestor quer trabalhar somente com indicação.</li> <br>
+    <li><b>Valor diária:</b> Estão ocorrendo diversas desistência onde a maioria dos motivos alegados é o valor da diária.</li> <br>
+    <li><b>Baixa Conversão:</b> Absenteísmo de 70% nas entrevistas/treinamentos (convocação de 35/dia para 30% de presença). Baixa efetividade do SINE e indisponibilidade da base de temporários de Julho.</li> <br>
+    <li><b>Perfil:</b> Resistência do mercado local a contratos formais/efetivação em detrimento de modelos informais.</li> <br>
+ 
+                    
+    """, unsafe_allow_html=True)
+
 # =========== DIÁRIAS ============
-if st.session_state.current_tab == "Diárias":
+elif st.session_state.current_tab == "Diárias":
     pedidos = pd.read_csv('dados/ANALISE_PEDIDO.csv', sep=';', decimal=',', encoding='latin1')
     solicitadas = int(pedidos.Solicitado.iloc[0])
     entregues = int(pedidos.Entregue.iloc[0])
@@ -188,8 +372,7 @@ if st.session_state.current_tab == "Diárias":
     <div class="diarias-motivos">
       <div class="diarias-motivos-title">Motivos para Diárias abaixo do Solicitado</div>
       <ol style="margin-top:0.1em;margin-bottom:0.1em;">
-        <li>Alterações constantes nos pedidos, onde temos que aguardar até as 10:00h a central enviar as alterações e distribuição dos pedidos para o dia seguinte</li>
-<li>Problemas diários com transporte, onde recebemos negativa de roteiros, quando a maioria das solicitações são alteradas e solicitadas para o dia seguinte, não deixando margem para um processo seletivo considerando a ociosidade das rotas</li>
+        <li>A partir da segunda metade de dezembro, tivemos diversos problemas, como: baixa procura de trabalho, desisteñcias de contratações com menos de 5 dias em área e faltas ao trabalho, impactando diretamente na quantidade de diarias entregues.</li>
             </ol>
     </div>
     """, unsafe_allow_html=True)
@@ -328,3 +511,4 @@ if st.session_state.current_tab == "Histórico":
                 <li>Há aumento de desistências e negativas. O principal ponto informado por candidatos é a não aceitação de registro em carteira (mesmo em contrato temporário). Também observamos desistências na etapa de efetivação. Motivos associados: diária de R$ 80,00 em eventos menores, distância, transporte e preocupação com benefícios governamentais.</li>
 
    """, unsafe_allow_html=True)
+
