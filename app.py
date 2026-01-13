@@ -88,7 +88,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 01 a 12/01/2026
+    <p class="periodo-value">Semana 01 a 10/01/2026
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -178,7 +178,7 @@ if st.session_state.current_tab == "Diárias":
     st.markdown(f"""
     <div class="diarias-card-sucesso">
       <b>Desempenho abaixo</b><br>
-      No periodo de  22 a 28/12/2025, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
+      No periodo de  01 a 10/01/2026, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
       Taxa de atendimento: <b>{taxa:.2f}%</b>.
     </div>
     """, unsafe_allow_html=True)
@@ -324,7 +324,7 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#9888; Pontos de Atenção</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Controle mais rigoroso de STHs vencidas</li>
-                <li>Há aumento de desistências e negativas. O principal ponto informado por candidatos é a não aceitação de registro em carteira (mesmo em contrato temporário). Também observamos desistências na etapa de efetivação. Motivos associados: diária de R$ 80,00 em eventos menores, distância, transporte e preocupação com benefícios governamentais.</li>
+                <li>Mudanças constantes nos pedidos e na grande maioria das vezes para o dia seguinte.</li>
+                <li>Pedidos de urgência combinados com negativas de rotas, segue sendo o principal ofensor para entrega dentro do prazo.</li>
 
    """, unsafe_allow_html=True)
