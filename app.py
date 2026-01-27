@@ -89,7 +89,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 13 a 26/01/2026
+    <p class="periodo-value">Semana 01 a 25/01/2026
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 13 a 26/01/2026</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 01 a 25/01/2026</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -177,7 +177,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 13 a 26/01/2026</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 01 a 25/01/2026</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -329,7 +329,7 @@ elif st.session_state.current_tab == "Diárias":
     # Gráfico de barras
     fig_barras = go.Figure()
     fig_barras.add_trace(go.Bar(
-        x=["13 a 26/01/2026"],
+        x=["01 a 25/01/2026"],
         y=[solicitadas],
         name="Solicitadas",
         marker=dict(color="#FFA500"),
@@ -337,7 +337,7 @@ elif st.session_state.current_tab == "Diárias":
         textposition="outside"
     ))
     fig_barras.add_trace(go.Bar(
-        x=["13 a 26/01/2026"],
+        x=["01 a 25/01/2026"],
         y=[entregues],
         name="Entregues",
         marker=dict(color="#23B26D"),
@@ -360,7 +360,7 @@ elif st.session_state.current_tab == "Diárias":
     st.markdown(f"""
     <div class="diarias-card-sucesso">
       <b>Desempenho abaixo</b><br>
-      No periodo de  22 a 28/12/2025, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
+      No periodo de  01 a 25/01/2026, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
       Taxa de atendimento: <b>{taxa:.2f}%</b>.
     </div>
     """, unsafe_allow_html=True)
@@ -385,7 +385,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (13 a 26/01/2026)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 25/01/2026)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -433,7 +433,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (13 a 26/01/2026)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 25/01/2026)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -503,9 +503,8 @@ if st.session_state.current_tab == "Histórico":
                 <span style="font-size:1.08em;">&#9888; Pontos de Atenção</span>
             </div>
             <ul style="font-size:1em;margin-left:6px;margin-bottom:0;">
-                <li>Há aumento de desistências e negativas. O principal ponto informado por candidatos é a não aceitação de registro em carteira (mesmo em contrato temporário). Também observamos desistências na etapa de efetivação. Motivos associados: diária de R$ 80,00 em eventos menores, distância, transporte e preocupação com benefícios governamentais.</li>
-                <li>Infelizmente o perfil contratado nessa temporada vem demosntrando falta de compromisso, com elevado indice de absenteísmo</li>
-
+                <li>Em construção.</li>
+                
 
    """, unsafe_allow_html=True)
 
