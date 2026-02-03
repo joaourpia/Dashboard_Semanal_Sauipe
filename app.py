@@ -89,7 +89,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">Semana 01 a 25/01/2026
+    <p class="periodo-value">Semana 01 a 31/01/2026
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -134,7 +134,7 @@ if st.session_state.current_tab == "Visão Geral":
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Desempenho SLA - 01 a 25/01/2026</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Desempenho SLA - 01 a 31/01/2026</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
 
         no_prazo = sla["No_prazo"].iloc[0]
@@ -177,7 +177,7 @@ if st.session_state.current_tab == "Visão Geral":
 
     with col_bar:
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.markdown('<div class="graph-title">Diárias - 01 a 25/01/2026</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-title">Diárias - 01 a 31/01/2026</div>', unsafe_allow_html=True)
         st.markdown('<div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
@@ -221,9 +221,9 @@ if st.session_state.current_tab == "Visão Geral":
 
     st.markdown("""
     <div class="obs-box">
-    <b>Observações Importantes - 01 a 25/01/2026</b>
+    <b>Observações Importantes - 01 a 31/01/2026</b>
     <ul>
-      <li></b> SLA: 82% no período (01 a 25/01/2026).
+      <li></b> SLA: 82% no período (01 a 31/01/2026).
 Volume: diárias entregues 11,6% abaixo do solicitado (detalhes na aba Diárias).</li>
     </ul>
     </div>
@@ -329,7 +329,7 @@ elif st.session_state.current_tab == "Diárias":
     # Gráfico de barras
     fig_barras = go.Figure()
     fig_barras.add_trace(go.Bar(
-        x=["01 a 25/01/2026"],
+        x=["01 a 31/01/2026"],
         y=[solicitadas],
         name="Solicitadas",
         marker=dict(color="#FFA500"),
@@ -337,7 +337,7 @@ elif st.session_state.current_tab == "Diárias":
         textposition="outside"
     ))
     fig_barras.add_trace(go.Bar(
-        x=["01 a 25/01/2026"],
+        x=["01 a 31/01/2026"],
         y=[entregues],
         name="Entregues",
         marker=dict(color="#23B26D"),
@@ -360,7 +360,7 @@ elif st.session_state.current_tab == "Diárias":
     st.markdown(f"""
     <div class="diarias-card-sucesso">
       <b>Desempenho abaixo</b><br>
-      No periodo de  01 a 25/01/2026, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
+      No periodo de  01 a 31/01/2026, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style="color:#12bb26;">{saldo} diárias</b>.<br>
       Taxa de atendimento: <b>{taxa:.2f}%</b>.
     </div>
     """, unsafe_allow_html=True)
@@ -385,7 +385,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 25/01/2026)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 31/01/2026)</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -433,7 +433,7 @@ if st.session_state.current_tab == "Histórico":
 
     st.markdown("""
 <div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;">
-    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 25/01/2026)</div>
+    <div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 31/01/2026)</div>
 </div>
 """, unsafe_allow_html=True)
 
