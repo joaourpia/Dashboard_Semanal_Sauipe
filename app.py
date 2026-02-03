@@ -223,8 +223,9 @@ if st.session_state.current_tab == "Visão Geral":
     <div class="obs-box">
     <b>Observações Importantes - 01 a 31/01/2026</b>
     <ul>
-      <li></b> SLA: 82% no período (01 a 31/01/2026).
-Volume: diárias entregues 11,6% abaixo do solicitado (detalhes na aba Diárias).</li>
+      <li></b> SLA: 84,1% no período (01 a 31/01/2026).
+Volume: diárias entregues 8,19% abaixo do solicitado (detalhes na aba Diárias).
+Obs: Foram solicitadas 13124 diárias, porém 15% (1700) não respeitaram o prazo da SLA de 10 dias </li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
