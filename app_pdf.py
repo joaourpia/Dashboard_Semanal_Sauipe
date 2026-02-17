@@ -1,42 +1,7 @@
 import streamlit as st
-# A importação de components era utilizada apenas para acionar o print via JavaScript e foi removida.
+import streamlit.components.v1 as components
 import pandas as pd
-import datetime as dt
-import re
 import plotly.express as px
-import numpy as np
-
-def _labels_inteligentes(serie, max_labels=10):
-    s = pd.to_numeric(serie, errors='coerce').fillna(0)
-    n = len(s)
-    labels = [''] * n
-    if n == 0:
-        return labels
-    labels[0] = f"{int(s.iloc[0])}"
-    labels[-1] = f"{int(s.iloc[-1])}"
-
-    idx_candidates = {0, n-1}
-    for i in range(1, n-1):
-        if (s.iloc[i] > s.iloc[i-1] and s.iloc[i] > s.iloc[i+1]) or (s.iloc[i] < s.iloc[i-1] and s.iloc[i] < s.iloc[i+1]):
-            idx_candidates.add(i)
-
-    idx_sorted = sorted(idx_candidates)
-    if len(idx_sorted) > max_labels:
-        amostra = np.linspace(0, len(idx_sorted)-1, max_labels, dtype=int)
-        idx_sorted = [idx_sorted[i] for i in amostra]
-
-    for i in idx_sorted:
-        labels[i] = f"{int(s.iloc[i])}"
-    return labels
-
-def _posicoes_stagger(n, estilo='up'):
-    if estilo == 'up':
-        padrao = ['top center', 'top left', 'top right']
-    elif estilo == 'down':
-        padrao = ['bottom center', 'bottom left', 'bottom right']
-    else:
-        padrao = ['middle right', 'middle left']
-    return [padrao[i % len(padrao)] for i in range(n)]
 import plotly.graph_objects as go
 import base64
 
@@ -109,21 +74,24 @@ st.markdown(f"""
 </div>
 <div class="dashboard-header">
   <div class="header-left">
-    <h1>Dashboard fevereiro 2026</h1>
+    <h1>Dashboard janeiro 2026</h1>
     <p>Relatório de Contratação de Temporários - Mendes RH</p>
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">01 a 14/02/2026</p>
+    <p class="periodo-value">janeiro/2026</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ------------ Configuração de abas e estado ------------
-# Definição das abas disponíveis no dashboard. A aba "Pesquisa Temporada" e a funcionalidade de impressão foram removidas conforme solicitação.
-tab_names = ["Visão Geral", "Análise SLA", "Diárias", "Histórico", "Análise Entrega"]
+tab_names = ["Visão Geral", "Análise SLA", "Diárias", "Histórico", "Pesquisa Temporada"]
 if "current_tab" not in st.session_state:
     st.session_state.current_tab = tab_names[0]
+if "print_all" not in st.session_state:
+    st.session_state.print_all = False
+if "print_current" not in st.session_state:
+    st.session_state.print_current = False
 
 def set_tab(tab):
     """Altera a aba atual armazenada na sessão."""
@@ -140,7 +108,18 @@ for i, tab in enumerate(tab_names):
         unsafe_allow_html=True,
     )
 
-# A funcionalidade de exportação para PDF foi removida conforme solicitado.
+# --- Seleção de exportação e botão para imprimir ---
+with st.container():
+    col_export, col_button = st.columns([3,1])
+    with col_export:
+        export_option = st.radio("Exportar para PDF:", ["Aba atual", "Todas as abas"], horizontal=True)
+    with col_button:
+        if st.button("Imprimir em PDF"):
+            # Define flags para impressão; a nova execução da aplicação será acionada automaticamente
+            if export_option == "Todas as abas":
+                st.session_state.print_all = True
+            else:
+                st.session_state.print_current = True
 
 # -------- Funções de renderização para cada aba --------
 def render_visao_geral():
@@ -157,7 +136,7 @@ def render_visao_geral():
     </div>""", unsafe_allow_html=True)
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
-        st.markdown('<div class="graph-container"><div class="graph-title">Desempenho SLA - 01 a 14/02</div><div class="graph-content">', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container"><div class="graph-title">Desempenho SLA - janeiro-26</div><div class="graph-content">', unsafe_allow_html=True)
         no_prazo = sla['No_prazo'].iloc[0]
         fora_prazo = sla['Fora_prazo'].iloc[0]
         fig_pie = px.pie(values=[no_prazo, fora_prazo], names=["No Prazo", "Fora do Prazo"], hole=0.40, color_discrete_sequence=['#2266ee','#f65054'])
@@ -166,7 +145,7 @@ def render_visao_geral():
         st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar":False})
         st.markdown('</div></div>', unsafe_allow_html=True)
     with col_bar:
-        st.markdown('<div class="graph-container"><div class="graph-title">Diárias - 01 a 14/02</div><div class="graph-content">', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container"><div class="graph-title">Diárias - janeiro-26</div><div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
         saldo = entregues - solicitadas
@@ -177,8 +156,8 @@ def render_visao_geral():
         st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
         st.markdown(f"""<div class='diarias-card-sucesso' style='margin-top:8px;'>✅ Não superamos a meta! Entregamos {saldo} diárias a menos que o solicitado ({diaria_percent:.2f}%)</div></div></div>""", unsafe_allow_html=True)
     st.markdown("""<div class="obs-box">
-    <b>Observações Importantes - 1 a 14/02/2026</b>
-    <ul><li>SLA: 86,8% no periodo de 01 a 14/02. Importante ressaltar que esses dados estão sendo calculados mesmo que os pedidos de 01 a 09/02 tenham sido enviados fora do prazo da SLA (detalhes na aba SLA). Volume: diárias entregues 11,19% abaixo do solicitado, porém no mesmo cenário de diarias fora do prazo mencionadas acima. (detalhes na aba Diárias).</li></ul>
+    <b>Observações Importantes - janeiro-26</b>
+    <ul><li>SLA: 73,1% no mês de janeiro/26, com queda vs. meses anteriores (detalhes na aba SLA). Volume: diárias entregues 15,65% abaixo do solicitado (detalhes na aba Diárias).</li></ul>
     </div>""", unsafe_allow_html=True)
 
 def render_analise_sla():
@@ -197,9 +176,11 @@ def render_analise_sla():
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("""<div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
     <b>Contexto SLA</b><br>
-    <li><b>Pedidos fora do prazo:</b> O total entregue de SLA foi de 86,8%, porém do total considerado no relatório de 2137, 67% ( 1432) dos pedidos foram enviados fora do prazo.</li><br>
-    
-    """, unsafe_allow_html=True)
+    <li><b>STHS Complicadas:</b> Demanda de 10 camareiras aos sábados e domingos com baixíssima aderência, representando 27 entregas do total de 68 faltantes.</li><br>
+    <li><b>Valor diária:</b> Ocorreram diversas desistências onde a maioria dos motivos alegados é o valor da diária e em muitos casos evidente falta de compromisso. Fizemos uma pesquisa com uma amostra dos desistentes, onde os principais motivos alegados foram: "Tempo longo de espera para efetivação e não acreditar na promessa (69,2%)" e "não queria ser efetivado (30,8%)"</li><br>
+    <li><b>Baixa Conversão:</b> Absenteísmo de 70% nas entrevistas/treinamentos (convocação de 35/dia para 30% de presença). Baixa efetividade do SINE e indisponibilidade da base de temporários de Julho.</li><br>
+    <li><b>Perfil:</b> Resistência do mercado local a contratos formais/efetivação em detrimento de modelos informais.</li><br>
+    </div>""", unsafe_allow_html=True)
 
 def render_diarias():
     pedidos = pd.read_csv('dados/ANALISE_PEDIDO.csv', sep=';', decimal=',', encoding='latin1')
@@ -215,8 +196,8 @@ def render_diarias():
     fig_barras.add_trace(go.Bar(x=["novembro"], y=[entregues], name="Entregues", marker=dict(color="#23B26D"), text=[entregues], textposition="outside"))
     fig_barras.update_layout(barmode='group', xaxis=dict(title="", tickfont=dict(size=13, color="#212121")), yaxis=dict(title="", showticklabels=True, tickfont=dict(size=13, color="#666"), range=[0,max(solicitadas,entregues)*1.15]), height=310, margin=dict(t=30,b=30,l=28,r=28), legend=dict(orientation='h', x=0.5, y=-0.20, xanchor='center', font=dict(size=13)), plot_bgcolor="#fff", paper_bgcolor="#fff")
     st.plotly_chart(fig_barras, use_container_width=True, config={"displayModeBar": False})
-    st.markdown(f"""<div class="diarias-card-sucesso"><b>Desempenho abaixo</b><br> No perioso de 01 a 14/02/26, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style='color:#12bb26;'>{saldo} diárias</b>.<br> Taxa de atendimento: <b>{taxa:.2f}%</b>.</div>""", unsafe_allow_html=True)
-    st.markdown("""<div class="diarias-motivos"><div class="diarias-motivos-title">Motivos para Diárias Abaixo do Solicitado</div><ol style="margin-top:0.1em;margin-bottom:0.1em;"><li>A Os pedidos de 01 a 14/02/2026 foram enviados no dia 30/01/2026, portanto todos os pedidos de 01 a 09/02/2026 foram solicitados fora do prazo da sla. No periodo de 01 a 14/02 recebemos 3431 diárias fora do prazo da sla.</li></ol></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class="diarias-card-sucesso"><b>Desempenho abaixo</b><br> No mês de janeiro-26, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style='color:#12bb26;'>{saldo} diárias</b>.<br> Taxa de atendimento: <b>{taxa:.2f}%</b>.</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="diarias-motivos"><div class="diarias-motivos-title">Motivos para Diárias Abaixo do Solicitado</div><ol style="margin-top:0.1em;margin-bottom:0.1em;"><li>A partir da segunda metade de janeiro-26, tivemos diversos problemas, como: baixa procura de trabalho, desistências de contratações com menos de 5 dias em área e faltas ao trabalho, impactando diretamente na quantidade de diárias entregues.</li><li>Em relação às faltas, tivemos nesse período um absenteísmo de 30%.</li></ol></div>""", unsafe_allow_html=True)
 
 def render_pesquisa_temporada():
     """Renderiza a aba com resultados da pesquisa de temporários."""
@@ -307,7 +288,7 @@ def render_historico():
     sla_hist['Fora'] = 1 - sla_hist['Taxa']
     sla_hist['No Prazo (%)'] = sla_hist['Taxa'] * 100
     sla_hist['Fora do Prazo (%)'] = sla_hist['Fora'] * 100
-    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 14/02/2026)</div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (janeiro-26)</div></div>""", unsafe_allow_html=True)
     meses = sla_hist['Mes']
     fig1 = go.Figure(data=[
         go.Bar(name='No Prazo', x=meses, y=sla_hist['No Prazo (%)'], marker_color='#2266ee', text=[f"{v:.1f}%" for v in sla_hist['No Prazo (%)']], textposition='inside', insidetextanchor='middle', textfont=dict(color="#fff",size=12)),
@@ -320,7 +301,7 @@ def render_historico():
     ent_hist['Solicitadas'] = ent_hist['Solicitadas'].astype(int); ent_hist['Entregues'] = ent_hist['Entregues'].astype(int)
     ent_hist['Taxa_float'] = ent_hist['Taxa'].map(lambda x: float(str(x).replace(',', '.')))
     ent_hist['Taxa_%'] = ent_hist['Taxa_float'] * 100
-    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 14/02/2026)</div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (Janeiro-26)</div></div>""", unsafe_allow_html=True)
     meses2 = ent_hist['Mês']
     fig2 = go.Figure()
     fig2.add_trace(go.Bar(x=meses2, y=ent_hist['Solicitadas'], name='Solicitadas', marker_color='#FFA500', text=ent_hist['Solicitadas'], textposition='outside', textfont=dict(size=11,color="#222")))
@@ -328,350 +309,6 @@ def render_historico():
     fig2.add_trace(go.Scatter(x=meses2, y=ent_hist['Taxa_%'], mode='lines+markers+text', name='Taxa (%)', line=dict(color='#2266ee', width=2, shape='spline'), marker=dict(size=8,color='#2266ee'), text=[f"{tx:.2f}%" for tx in ent_hist['Taxa_%']], textposition="top center", textfont=dict(size=14,color="#fff")))
     fig2.update_layout(barmode='group', xaxis=dict(tickfont=dict(size=13)), yaxis=dict(title='', tickfont=dict(size=12), showgrid=True), legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center', font=dict(size=13)), height=540, margin=dict(l=20,r=20,t=120,b=38), plot_bgcolor='#fff', paper_bgcolor='#fff')
     st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar':False})
-
-# --- Nova função: Análise Entrega ---
-
-def _infer_period_from_histogram(hist_df: pd.DataFrame):
-    if hist_df is None or hist_df.empty:
-        raise ValueError("Histograma vazio.")
-    year_hint = None
-    month_hint = None
-    meses = {"janeiro":1,"fevereiro":2,"março":3,"marco":3,"abril":4,"maio":5,"junho":6,"julho":7,"agosto":8,"setembro":9,"outubro":10,"novembro":11,"dezembro":12}
-    for r in range(min(8, hist_df.shape[0])):
-        row_text = " ".join(hist_df.iloc[r, :min(12, hist_df.shape[1])].astype(str).tolist()).lower()
-        m_year = re.search(r"(20\d{2})", row_text)
-        if m_year and year_hint is None:
-            year_hint = int(m_year.group(1))
-        if month_hint is None:
-            for nome, num in meses.items():
-                if nome in row_text:
-                    month_hint = num
-                    break
-    if year_hint is None:
-        year_hint = dt.date.today().year
-    found_dates = []
-    for r in range(min(10, hist_df.shape[0])):
-        for c in range(3, hist_df.shape[1]):
-            v = hist_df.iat[r, c]
-            if isinstance(v, (pd.Timestamp, dt.datetime, dt.date)):
-                d = pd.to_datetime(v, errors="coerce")
-                if not pd.isna(d):
-                    found_dates.append(d.normalize()); continue
-            if isinstance(v, (int, float)):
-                try:
-                    iv = int(float(v))
-                    if 1 <= iv <= 31:
-                        mm = month_hint if month_hint else 1
-                        found_dates.append(pd.Timestamp(year_hint, mm, iv).normalize()); continue
-                except Exception:
-                    pass
-            s = str(v).strip()
-            m = re.match(r"^(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?$", s)
-            if m:
-                dd = int(m.group(1)); mm = int(m.group(2)); yy = m.group(3)
-                if yy:
-                    yy = int(yy); yy = yy + 2000 if yy < 100 else yy
-                else:
-                    yy = year_hint
-                try: found_dates.append(pd.Timestamp(yy, mm, dd).normalize())
-                except Exception: pass
-    if not found_dates:
-        today = pd.Timestamp.today().normalize()
-        start = today.replace(day=1)
-        end = (start + pd.offsets.MonthEnd(0)).normalize()
-        return start, end
-    return min(found_dates), max(found_dates)
-
-
-def render_analise_entrega():
-    """
-    Renderiza a aba de Análise de Entregas com comparação diária entre pedidos no prazo,
-    entregas realizadas e pedidos fora do prazo. Os dados são lidos de planilhas Excel
-    fornecidas pelo usuário. A função também calcula métricas de gap e exibe uma análise
-    interpretativa abaixo do gráfico.
-    """
-    import datetime
-    # Carregar dados de entregas (Total entregue por dia). Procura inicialmente em 'dados/ENTREGAS_DIA.xlsx'.
-    try:
-        entregas_df = pd.read_excel('dados/ENTREGAS_DIA.xlsx')
-    except Exception:
-        # Caso não exista na pasta 'dados', tenta utilizar o arquivo original enviado. Isto permite que a aba funcione mesmo sem renomear o arquivo.
-        try:
-            entregas_df = pd.read_excel('7885c9e9-106d-4fe5-b69d-445a31d51a65.xlsx')
-            st.warning("Utilizando arquivo de entregas original (7885c9e9-...). Para uso em produção, renomeie para 'dados/ENTREGAS_DIA.xlsx'.")
-        except Exception:
-            st.warning("Dados de entregas diárias não encontrados. Certifique-se de que o arquivo 'ENTREGAS_DIA.xlsx' esteja na pasta 'dados'.")
-            return
-    # Remover linha de total se existir e garantir conversão de datas
-    if 'Data' in entregas_df.columns:
-        entregas_df = entregas_df[entregas_df['Data'].astype(str).str.upper() != 'TOTAL']
-        try:
-            entregas_df['Data'] = pd.to_datetime(entregas_df['Data'])
-        except Exception:
-            pass
-    # Renomear a coluna de valor para 'entregas'
-    entregas_df = entregas_df.rename(columns={col: 'entregas' for col in entregas_df.columns if 'Total' in col or 'entregue' in col})
-
-    # Carregar dados de pedidos (dentro e fora do prazo)
-    try:
-        pedidos_xls = pd.ExcelFile('dados/PEDIDOS_DIA.xlsx')
-    except Exception:
-        # Caso não exista na pasta 'dados', tenta utilizar o arquivo original enviado
-        try:
-            pedidos_xls = pd.ExcelFile('5d357de9-4d77-42ad-8608-c81bc592a7f7.xlsx')
-            st.warning("Utilizando arquivo de pedidos original (5d357de9-...). Para uso em produção, renomeie para 'dados/PEDIDOS_DIA.xlsx'.")
-        except Exception:
-            st.warning("Dados de pedidos diários não encontrados. Certifique-se de que o arquivo 'PEDIDOS_DIA.xlsx' esteja na pasta 'dados'.")
-            return
-    # Ler as planilhas necessárias
-    try:
-        hist = pedidos_xls.parse('HISTOGRAMA', header=None)
-        ex = pedidos_xls.parse('HISTOGRAMA_EXCEDENTE', header=None)
-    except Exception:
-        st.error("As planilhas 'HISTOGRAMA' ou 'HISTOGRAMA_EXCEDENTE' não foram encontradas no arquivo de pedidos.")
-        return
-    # Extrair valores de pedidos no prazo e fora do prazo (linhas SUBTOTAL (FILTRO)) - dinâmico por data
-    def _parse_hdr_date(v, year_hint, month_hint):
-        if pd.isna(v):
-            return None
-        if isinstance(v, (pd.Timestamp, dt.datetime, dt.date)):
-            return pd.to_datetime(v).normalize()
-        s = str(v).strip()
-        if not s:
-            return None
-        m = re.match(r'^(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?$', s)
-        if m:
-            dd = int(m.group(1)); mm = int(m.group(2)); yy = m.group(3)
-            if yy is None:
-                yy = year_hint
-            else:
-                yy = int(yy); yy = yy + 2000 if yy < 100 else yy
-            try:
-                return pd.Timestamp(int(yy), mm, dd).normalize()
-            except Exception:
-                return None
-        try:
-            day = int(float(s.replace(',', '.')))
-            if 1 <= day <= 31:
-                return pd.Timestamp(int(year_hint), int(month_hint), day).normalize()
-        except Exception:
-            return None
-        return None
-
-    # inferência de mês/ano pelo campo período no app
-    meses = {'janeiro':1,'fevereiro':2,'março':3,'marco':3,'abril':4,'maio':5,'junho':6,'julho':7,'agosto':8,'setembro':9,'outubro':10,'novembro':11,'dezembro':12}
-    periodo_txt = str(periodo_referencia).lower() if 'periodo_referencia' in locals() else ''
-    mes_numero = next((n for k,n in meses.items() if k in periodo_txt), 1)
-    m_ano = re.search(r'(20\d{2})', periodo_txt)
-    ano_numero = int(m_ano.group(1)) if m_ano else pd.Timestamp.today().year
-
-    try:
-        row_no = hist[hist.iloc[:,0].astype(str).str.upper().str.strip() == 'SUBTOTAL (FILTRO)'].iloc[0]
-        row_out = ex[ex.iloc[:,0].astype(str).str.upper().str.strip() == 'SUBTOTAL (FILTRO)'].iloc[0]
-    except Exception:
-        st.error("Não foi possível extrair os totais de pedidos no prazo/fora do prazo.")
-        return
-
-    datas, values_no, values_out = [], [], []
-    header_row = 1 if hist.shape[0] > 1 else 0
-    for c in range(3, hist.shape[1]):
-        d = _parse_hdr_date(hist.iat[header_row, c], ano_numero, mes_numero)
-        if d is None:
-            continue
-        vno = pd.to_numeric(row_no.iloc[c], errors='coerce')
-        vout = pd.to_numeric(row_out.iloc[c], errors='coerce')
-        datas.append(d)
-        values_no.append(0 if pd.isna(vno) else float(vno))
-        values_out.append(0 if pd.isna(vout) else float(vout))
-
-    if not datas:
-        st.error("Não encontrei datas válidas no cabeçalho do histograma.")
-        return
-
-    pedidos_df = pd.DataFrame({
-        'Data': pd.to_datetime(datas).normalize(),
-        'pedidos_no_prazo': values_no,
-        'pedidos_fora_prazo': values_out
-    }).groupby('Data', as_index=False).sum()
-
-    period_start = pedidos_df['Data'].min()
-    period_end = pedidos_df['Data'].max()
-# Mesclar com entregas (com alinhamento robusto de período)
-    entregas_df['Data'] = pd.to_datetime(entregas_df['Data'], errors='coerce').dt.normalize()
-    entregas_df = entregas_df.dropna(subset=['Data']).copy()
-
-    # Se não houver interseção de datas, realinha pedidos para o mês/ano dominante das entregas
-    intersec = set(pd.to_datetime(pedidos_df['Data']).dt.normalize()) & set(entregas_df['Data'])
-    if len(intersec) == 0 and not entregas_df.empty and not pedidos_df.empty:
-        ano_ref = int(entregas_df['Data'].dt.year.mode().iloc[0])
-        mes_ref = int(entregas_df['Data'].dt.month.mode().iloc[0])
-        pedidos_df['Data'] = pd.to_datetime(pedidos_df['Data'], errors='coerce').apply(
-            lambda d: pd.Timestamp(ano_ref, mes_ref, int(d.day)) if pd.notna(d) else pd.NaT
-        )
-        pedidos_df = pedidos_df.dropna(subset=['Data'])
-
-    dados = pd.merge(pedidos_df, entregas_df[['Data', 'entregas']], on='Data', how='left')
-    dados['entregas'] = pd.to_numeric(dados['entregas'], errors='coerce').fillna(0.0).astype(float)
-    # --- Ajuste inteligente de legibilidade (mensal / parcial) ---
-    def _smart_dtick_ms(n_points: int) -> int:
-        # retorna dtick em milissegundos (dia(s))
-        if n_points <= 14:
-            d = 1
-        elif n_points <= 31:
-            d = 2
-        elif n_points <= 62:
-            d = 3
-        else:
-            d = 7
-        return d * 24 * 60 * 60 * 1000
-
-    def _sparse_labels(vals: pd.Series, n_points: int) -> list:
-        # cliente solicitou TODOS os rótulos
-        v = pd.to_numeric(vals, errors='coerce').fillna(0).tolist()
-        return [f"{int(round(x))}" for x in v]
-
-        # sempre mostrar o último
-        out[-1] = f"{int(round(v[-1]))}"
-
-        # se for curto, mostre mais
-        if n_points <= 14:
-            step = 1
-        elif n_points <= 31:
-            step = 2
-        elif n_points <= 62:
-            step = 3
-        else:
-            step = 7
-
-        # marca pontos a cada step (mas evita poluir demais)
-        for i in range(0, len(v), step):
-            out[i] = f"{int(round(v[i]))}"
-
-        # adiciona picos/vales locais
-        for i in range(1, len(v)-1):
-            if v[i] > v[i-1] and v[i] > v[i+1]:
-                out[i] = f"{int(round(v[i]))}"
-            if v[i] < v[i-1] and v[i] < v[i+1]:
-                out[i] = f"{int(round(v[i]))}"
-
-        return out
-
-    n_points = int(len(dados))
-    dtick_ms = _smart_dtick_ms(n_points)
-    # folga no topo do Y para rótulos
-    max_y = float(pd.concat([
-        pd.to_numeric(dados['pedidos_no_prazo'], errors='coerce'),
-        pd.to_numeric(dados['entregas'], errors='coerce'),
-        pd.to_numeric(dados['pedidos_fora_prazo'], errors='coerce'),
-    ]).fillna(0).max())
-    y_max = max_y * (1.18 if max_y > 0 else 10)
-
-    # Plot interativo com 3 séries
-    fig = go.Figure()
-    # Pedidos no prazo
-    fig.add_trace(go.Scatter(
-        x=dados['Data'],
-        y=dados['pedidos_no_prazo'],
-        mode='lines+markers+text',
-        name='Pedidos no Prazo',
-        line=dict(color='#2266ee', width=2),
-        marker=dict(size=6, color='#2266ee'),
-        text=_sparse_labels(dados['pedidos_no_prazo'], n_points),
-        textposition='top center',
-        textfont=dict(size=11, color='#2266ee'),
-        cliponaxis=False
-    ))
-    # Entregas
-    fig.add_trace(go.Scatter(
-        x=dados['Data'],
-        y=dados['entregas'],
-        mode='lines+markers+text',
-        name='Entregas',
-        line=dict(color='#23B26D', width=2),
-        marker=dict(size=6, color='#23B26D'),
-        text=_sparse_labels(dados['entregas'], n_points),
-        textposition='bottom center',
-        textfont=dict(size=11, color='#23B26D'),
-        cliponaxis=False
-    ))
-    # Pedidos fora do prazo
-    fig.add_trace(go.Scatter(
-        x=dados['Data'],
-        y=dados['pedidos_fora_prazo'],
-        mode='lines+markers+text',
-        name='Pedidos fora do Prazo',
-        line=dict(color='#f65054', width=2, dash='dash'),
-        marker=dict(size=6, color='#f65054'),
-        text=_sparse_labels(dados['pedidos_fora_prazo'], n_points),
-        textposition='top right',
-        textfont=dict(size=11, color='#f65054'),
-        cliponaxis=False
-    ))
-    # Ajustes de layout
-    fig.update_layout(
-        title='',
-        xaxis=dict(
-            title='',
-            tickformat='%d/%m',
-            tickfont=dict(size=10),
-            dtick=dtick_ms,
-            showgrid=False
-        ),
-        yaxis=dict(
-            title='Quantidade',
-            tickfont=dict(size=10),
-            range=[0, y_max],
-            nticks=8,
-            gridcolor='rgba(120,140,170,0.22)',
-            zeroline=False
-        ),
-        legend=dict(orientation='h', y=-0.28, x=0.5, xanchor='center', font=dict(size=10)),
-        height=620 if n_points > 20 else 480,
-        margin=dict(l=18, r=18, t=35, b=95),
-        hovermode='x unified',
-        plot_bgcolor='#fff', paper_bgcolor='#fff'
-    )
-    # Container e título
-    st.markdown(f"<div class='graph-container'><div class='graph-title'>Pedidos x Entregas x Pedidos Fora do Prazo ({period_start.strftime('%d/%m/%Y')} a {period_end.strftime('%d/%m/%Y')})</div><div class='graph-content'>", unsafe_allow_html=True)
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-    st.markdown('</div></div>', unsafe_allow_html=True)
-    # Cálculos para análise interpretativa
-    gap = pd.to_numeric(dados['pedidos_no_prazo'], errors='coerce').fillna(0) - pd.to_numeric(dados['entregas'], errors='coerce').fillna(0)
-    avg_pedidos = dados['pedidos_no_prazo'].mean()
-    avg_entregas = float(pd.to_numeric(dados['entregas'], errors='coerce').fillna(0).mean())
-    avg_fora = dados['pedidos_fora_prazo'].mean()
-    avg_total_pedidos = float((pd.to_numeric(dados['pedidos_no_prazo'], errors='coerce').fillna(0) + pd.to_numeric(dados['pedidos_fora_prazo'], errors='coerce').fillna(0)).mean())
-    pos_days = (gap > 0).sum()
-    neg_days = (gap < 0).sum()
-    # robustez: evita KeyError quando gap está vazio ou índice inválido
-    if len(gap.dropna()) == 0:
-        max_gap = 0
-        min_gap = 0
-        max_gap_date = "-"
-        min_gap_date = "-"
-    else:
-        idx_max = gap.dropna().idxmax()
-        idx_min = gap.dropna().idxmin()
-        max_gap = float(gap.loc[idx_max]) if idx_max in gap.index else 0
-        min_gap = float(gap.loc[idx_min]) if idx_min in gap.index else 0
-        max_gap_date = dados.loc[idx_max, 'Data'].strftime('%d/%m') if idx_max in dados.index and pd.notna(dados.loc[idx_max, 'Data']) else "-"
-        min_gap_date = dados.loc[idx_min, 'Data'].strftime('%d/%m') if idx_min in dados.index and pd.notna(dados.loc[idx_min, 'Data']) else "-"
-
-    # Texto de análise (amplo e executável para gestão)
-    pct_fora_media = (avg_fora / (avg_pedidos + avg_fora) * 100) if (avg_pedidos + avg_fora) > 0 else 0
-    saldo_medio_sla = (avg_entregas - avg_pedidos)
-
-    analise = f"""
-    <ul>
-      <li><b>Destaque do período:</b> no intervalo analisado, a média diária foi de <b>{avg_pedidos:.0f}</b> pedidos dentro do prazo, <b>{avg_fora:.0f}</b> pedidos fora do prazo e <b>{avg_entregas:.0f}</b> temporários entregues.</li>
-      <li><b>Leitura de SLA:</b> o saldo médio entre entregas e obrigação SLA (<i>Entregas - Pedidos dentro do prazo</i>) foi de <b>{saldo_medio_sla:.0f}</b> por dia.</li>
-      <li><b>Pressão por prazo:</b> o volume médio fora do prazo foi de <b>{avg_fora:.0f}</b> por dia, representando <b>{pct_fora_media:.0f}%</b> da demanda média total (<b>{avg_total_pedidos:.0f}</b>/dia).</li>
-      <li><b>Pico de déficit frente à obrigação SLA:</b> em <b>{max_gap_date}</b> houve o maior backlog diário, com <b>{max_gap:.0f}</b> pedidos acima das entregas.</li>
-      <li><b>Pico de superávit de entrega:</b> em <b>{min_gap_date}</b> as entregas superaram a obrigação SLA em <b>{abs(min_gap):.0f}</b>.</li>
-      <li><b>Distribuição dos dias:</b> houve <b>{pos_days}</b> dias com déficit (entrega abaixo da obrigação SLA) e <b>{neg_days}</b> dias com superávit (entrega acima da obrigação SLA).</li>
-    </ul>
-    """
-    st.markdown(f"<div class='obs-box'>{analise}</div>", unsafe_allow_html=True)
 
 # ---- Função helper para renderizar de acordo com o nome ----
 def render_tab(name):
@@ -685,10 +322,28 @@ def render_tab(name):
         render_historico()
     elif name == "Pesquisa Temporada":
         render_pesquisa_temporada()
-    elif name == "Análise Entrega":
-        # Chama a nova função de análise de entregas quando a aba correspondente é selecionada.
-        render_analise_entrega()
 
 # ---- Lógica principal de impressão e renderização ----
-# Renderiza apenas a aba selecionada. A funcionalidade de impressão foi removida.
-render_tab(st.session_state.current_tab)
+if st.session_state.print_all:
+    # Gera todas as abas sequencialmente para o PDF
+    for name in tab_names:
+        st.markdown(f"<h2 style='margin-top:35px;color:#205891;'>{name}</h2>", unsafe_allow_html=True)
+        render_tab(name)
+    # Aciona o print do navegador
+    # Aciona a função de impressão no contexto da página. Usamos tanto components.html quanto markdown
+    # para maximizar a chance de o script executar corretamente em diferentes navegadores.
+    # Insere script com atraso para garantir que todo o conteúdo esteja carregado antes da impressão
+    components.html("<script>setTimeout(() => { window.print(); }, 500);</script>")
+    st.markdown("<script>setTimeout(() => { window.print(); }, 500)</script>", unsafe_allow_html=True)
+    st.session_state.print_all = False
+elif st.session_state.print_current:
+    # Imprime apenas a aba atual
+    render_tab(st.session_state.current_tab)
+    # Imprime somente a aba atual
+    # Insere script com atraso para imprimir a aba atual
+    components.html("<script>setTimeout(() => { window.print(); }, 500);</script>")
+    st.markdown("<script>setTimeout(() => { window.print(); }, 500)</script>", unsafe_allow_html=True)
+    st.session_state.print_current = False
+else:
+    # Renderiza apenas a aba selecionada
+    render_tab(st.session_state.current_tab)
