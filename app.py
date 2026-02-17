@@ -5,6 +5,8 @@ import datetime as dt
 import re
 import plotly.express as px
 import numpy as np
+from pathlib import Path
+import importlib.util
 
 def _labels_inteligentes(serie, max_labels=10):
     s = pd.to_numeric(serie, errors='coerce').fillna(0)
@@ -383,6 +385,24 @@ def _infer_period_from_histogram(hist_df: pd.DataFrame):
     return min(found_dates), max(found_dates)
 
 
+
+def _project_root() -> Path:
+    p = Path(__file__).resolve().parent
+    for _ in range(6):
+        if (p / "dados").exists():
+            return p
+        p = p.parent
+    return Path(__file__).resolve().parent
+
+def _safe_data_path(filename: str) -> Path:
+    return _project_root() / "dados" / filename
+
+def _read_excel_safe(path: Path, **kwargs):
+    return pd.read_excel(path, engine="openpyxl", **kwargs)
+
+def _excel_file_safe(path: Path):
+    return pd.ExcelFile(path, engine="openpyxl")
+
 def render_analise_entrega():
     """
     Renderiza a aba de Análise de Entregas com comparação diária entre pedidos no prazo,
@@ -391,9 +411,10 @@ def render_analise_entrega():
     interpretativa abaixo do gráfico.
     """
     import datetime
+    periodo_referencia = '01 a 14/02/2026'
     # Carregar dados de entregas (Total entregue por dia). Procura inicialmente em 'dados/ENTREGAS_DIA.xlsx'.
     try:
-        entregas_df = pd.read_excel('dados/ENTREGAS_DIA.xlsx')
+        entregas_df = _read_excel_safe(_safe_data_path('ENTREGAS_DIA.xlsx'))
     except Exception:
         # Caso não exista na pasta 'dados', tenta utilizar o arquivo original enviado. Isto permite que a aba funcione mesmo sem renomear o arquivo.
         try:
@@ -414,11 +435,11 @@ def render_analise_entrega():
 
     # Carregar dados de pedidos (dentro e fora do prazo)
     try:
-        pedidos_xls = pd.ExcelFile('dados/PEDIDOS_DIA.xlsx')
+        pedidos_xls = _excel_file_safe(_safe_data_path('PEDIDOS_DIA.xlsx'))
     except Exception:
         # Caso não exista na pasta 'dados', tenta utilizar o arquivo original enviado
         try:
-            pedidos_xls = pd.ExcelFile('5d357de9-4d77-42ad-8608-c81bc592a7f7.xlsx')
+            pedidos_xls = pd.ExcelFile('5d357de9-4d77-42ad-8608-c81bc592a7f7.xlsx', engine='openpyxl')
             st.warning("Utilizando arquivo de pedidos original (5d357de9-...). Para uso em produção, renomeie para 'dados/PEDIDOS_DIA.xlsx'.")
         except Exception:
             st.warning("Dados de pedidos diários não encontrados. Certifique-se de que o arquivo 'PEDIDOS_DIA.xlsx' esteja na pasta 'dados'.")
