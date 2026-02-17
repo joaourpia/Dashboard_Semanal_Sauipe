@@ -515,11 +515,17 @@ def render_analise_entrega():
         'pedidos_fora_prazo': values_out
     }).groupby('Data', as_index=False).sum()
 
+    # Período padrão inicial pelos pedidos (será recalculado com prioridade para ENTREGAS)
     period_start = pedidos_df['Data'].min()
     period_end = pedidos_df['Data'].max()
 # Mesclar com entregas (com alinhamento robusto de período)
     entregas_df['Data'] = pd.to_datetime(entregas_df['Data'], errors='coerce').dt.normalize()
     entregas_df = entregas_df.dropna(subset=['Data']).copy()
+
+    # Período inteligente: prioriza as datas reais da planilha de ENTREGAS
+    if not entregas_df.empty:
+        period_start = entregas_df['Data'].min()
+        period_end = entregas_df['Data'].max()
 
     # Se não houver interseção de datas, realinha pedidos para o mês/ano dominante das entregas
     intersec = set(pd.to_datetime(pedidos_df['Data']).dt.normalize()) & set(entregas_df['Data'])
@@ -533,6 +539,11 @@ def render_analise_entrega():
 
     dados = pd.merge(pedidos_df, entregas_df[['Data', 'entregas']], on='Data', how='left')
     dados['entregas'] = pd.to_numeric(dados['entregas'], errors='coerce').fillna(0.0).astype(float)
+
+    # Fallback: se entregas estiver vazio, usa o intervalo do dataframe final
+    if (pd.isna(period_start) or pd.isna(period_end)) and not dados.empty:
+        period_start = pd.to_datetime(dados['Data']).min()
+        period_end = pd.to_datetime(dados['Data']).max()
     # --- Ajuste inteligente de legibilidade (mensal / parcial) ---
     def _smart_dtick_ms(n_points: int) -> int:
         # retorna dtick em milissegundos (dia(s))
