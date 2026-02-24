@@ -116,7 +116,7 @@ st.markdown(f"""
   </div>
   <div class="header-right">
     <p class="periodo-label">Período</p>
-    <p class="periodo-value">01 a 14/02/2026</p>
+    <p class="periodo-value">16 a 22/02/2026</p>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -159,7 +159,7 @@ def render_visao_geral():
     </div>""", unsafe_allow_html=True)
     col_pie, col_bar = st.columns(2, gap="medium")
     with col_pie:
-        st.markdown('<div class="graph-container"><div class="graph-title">Desempenho SLA - 01 a 14/02</div><div class="graph-content">', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container"><div class="graph-title">Desempenho SLA - 16 a 22/02</div><div class="graph-content">', unsafe_allow_html=True)
         no_prazo = sla['No_prazo'].iloc[0]
         fora_prazo = sla['Fora_prazo'].iloc[0]
         fig_pie = px.pie(values=[no_prazo, fora_prazo], names=["No Prazo", "Fora do Prazo"], hole=0.40, color_discrete_sequence=['#2266ee','#f65054'])
@@ -168,7 +168,7 @@ def render_visao_geral():
         st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar":False})
         st.markdown('</div></div>', unsafe_allow_html=True)
     with col_bar:
-        st.markdown('<div class="graph-container"><div class="graph-title">Diárias - 01 a 14/02</div><div class="graph-content">', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container"><div class="graph-title">Diárias - 16 a 22/02</div><div class="graph-content">', unsafe_allow_html=True)
         solicitadas = pedidos.Solicitado.iloc[0]
         entregues = pedidos.Entregue.iloc[0]
         saldo = entregues - solicitadas
@@ -179,8 +179,8 @@ def render_visao_geral():
         st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
         st.markdown(f"""<div class='diarias-card-sucesso' style='margin-top:8px;'>✅ Não superamos a meta! Entregamos {saldo} diárias a menos que o solicitado ({diaria_percent:.2f}%)</div></div></div>""", unsafe_allow_html=True)
     st.markdown("""<div class="obs-box">
-    <b>Observações Importantes - 1 a 14/02/2026</b>
-    <ul><li>SLA: 86,8% no periodo de 01 a 14/02. Importante ressaltar que esses dados estão sendo calculados mesmo que os pedidos de 01 a 09/02 tenham sido enviados fora do prazo da SLA (detalhes na aba SLA). Volume: diárias entregues 11,19% abaixo do solicitado, porém no mesmo cenário de diarias fora do prazo mencionadas acima. (detalhes na aba Diárias).</li></ul>
+    <b>Observações Importantes - 16 a 22/02/2026</b>
+    <ul><li>SLA: 108,5% no periodo de 16 a 22/02 (detalhes na aba SLA). Volume: diárias entregues 19,13% acima do solicitado (detalhes na aba Diárias). Importante ressaltar que esses dados estão sendo calculados somente com relação aos pedidos dentro do prazo da SLA de 10 dias</li></ul>
     </div>""", unsafe_allow_html=True)
 
 def render_analise_sla():
@@ -199,7 +199,7 @@ def render_analise_sla():
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("""<div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
     <b>Contexto SLA</b><br>
-    <li><b>Pedidos fora do prazo:</b> O total entregue de SLA foi de 86,8%, porém do total considerado no relatório de 2137, 67% ( 1432) dos pedidos foram enviados fora do prazo.</li><br>
+    <li><b>Pedidos fora do prazo:</b> O total entregue de SLA foi de 108,46%, considerando os pedidos dentro do prazo.</li><br>
     
     """, unsafe_allow_html=True)
 
@@ -217,8 +217,8 @@ def render_diarias():
     fig_barras.add_trace(go.Bar(x=["novembro"], y=[entregues], name="Entregues", marker=dict(color="#23B26D"), text=[entregues], textposition="outside"))
     fig_barras.update_layout(barmode='group', xaxis=dict(title="", tickfont=dict(size=13, color="#212121")), yaxis=dict(title="", showticklabels=True, tickfont=dict(size=13, color="#666"), range=[0,max(solicitadas,entregues)*1.15]), height=310, margin=dict(t=30,b=30,l=28,r=28), legend=dict(orientation='h', x=0.5, y=-0.20, xanchor='center', font=dict(size=13)), plot_bgcolor="#fff", paper_bgcolor="#fff")
     st.plotly_chart(fig_barras, use_container_width=True, config={"displayModeBar": False})
-    st.markdown(f"""<div class="diarias-card-sucesso"><b>Desempenho abaixo</b><br> No perioso de 01 a 14/02/26, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style='color:#12bb26;'>{saldo} diárias</b>.<br> Taxa de atendimento: <b>{taxa:.2f}%</b>.</div>""", unsafe_allow_html=True)
-    st.markdown("""<div class="diarias-motivos"><div class="diarias-motivos-title">Motivos para Diárias Abaixo do Solicitado</div><ol style="margin-top:0.1em;margin-bottom:0.1em;"><li>A Os pedidos de 01 a 14/02/2026 foram enviados no dia 30/01/2026, portanto todos os pedidos de 01 a 09/02/2026 foram solicitados fora do prazo da sla. No periodo de 01 a 14/02 recebemos 3431 diárias fora do prazo da sla.</li></ol></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class="diarias-card-sucesso"><b>Desempenho abaixo</b><br> No perioso de 16 a 22/02/26, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style='color:#12bb26;'>{saldo} diárias</b>.<br> Taxa de atendimento: <b>{taxa:.2f}%</b>.</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="diarias-motivos"><div class="diarias-motivos-title">""", unsafe_allow_html=True)
 
 def render_pesquisa_temporada():
     """Renderiza a aba com resultados da pesquisa de temporários."""
@@ -309,7 +309,7 @@ def render_historico():
     sla_hist['Fora'] = 1 - sla_hist['Taxa']
     sla_hist['No Prazo (%)'] = sla_hist['Taxa'] * 100
     sla_hist['Fora do Prazo (%)'] = sla_hist['Fora'] * 100
-    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (01 a 14/02/2026)</div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (16 a 22/02/2026)</div></div>""", unsafe_allow_html=True)
     meses = sla_hist['Mes']
     fig1 = go.Figure(data=[
         go.Bar(name='No Prazo', x=meses, y=sla_hist['No Prazo (%)'], marker_color='#2266ee', text=[f"{v:.1f}%" for v in sla_hist['No Prazo (%)']], textposition='inside', insidetextanchor='middle', textfont=dict(color="#fff",size=12)),
@@ -322,7 +322,7 @@ def render_historico():
     ent_hist['Solicitadas'] = ent_hist['Solicitadas'].astype(int); ent_hist['Entregues'] = ent_hist['Entregues'].astype(int)
     ent_hist['Taxa_float'] = ent_hist['Taxa'].map(lambda x: float(str(x).replace(',', '.')))
     ent_hist['Taxa_%'] = ent_hist['Taxa_float'] * 100
-    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (01 a 14/02/2026)</div></div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (16 a 22/02/2026)</div></div>""", unsafe_allow_html=True)
     meses2 = ent_hist['Mês']
     fig2 = go.Figure()
     fig2.add_trace(go.Bar(x=meses2, y=ent_hist['Solicitadas'], name='Solicitadas', marker_color='#FFA500', text=ent_hist['Solicitadas'], textposition='outside', textfont=dict(size=11,color="#222")))
@@ -411,7 +411,7 @@ def render_analise_entrega():
     interpretativa abaixo do gráfico.
     """
     import datetime
-    periodo_referencia = '01 a 14/02/2026'
+    periodo_referencia = '16 a 22/02/2026'
     # Carregar dados de entregas (Total entregue por dia). Procura inicialmente em 'dados/ENTREGAS_DIA.xlsx'.
     try:
         entregas_df = _read_excel_safe(_safe_data_path('ENTREGAS_DIA.xlsx'))
