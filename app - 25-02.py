@@ -106,7 +106,7 @@ def _project_root() -> Path:
 def _safe_data_path(filename: str) -> Path: 
     return _project_root() / "dados" / filename
 
-# --- Funções de Renderização das Abas Antigas ---
+# --- Funções de Renderização Antigas ---
 def render_visao_geral():
     try:
         sla = pd.read_csv(_safe_data_path('SLA.csv'), sep=';', decimal=',', encoding='latin1')
@@ -210,7 +210,8 @@ def render_pesquisa_temporada():
     fig_rec.update_layout(showlegend=False, title_text="Recepção no Primeiro Dia", height=300)
     st.plotly_chart(fig_rec, use_container_width=True, config={"displayModeBar":False})
 
-# --- ANÁLISE ENTREGA (COM GRÁFICOS E TEXTOS AVANÇADOS) ---
+# --- ANÁLISE ENTREGA (COM GRÁFICO DUPLO E PRAZO MÉDIO) ---
+
 @st.cache_data(ttl=3600)
 def load_historical_sth_data(pasta_path):
     arquivos = glob.glob(os.path.join(pasta_path, '*.xlsx'))
@@ -271,7 +272,7 @@ def render_analise_entrega():
             break
             
     if header_row is None:
-        st.warning("Não encontrei a linha de datas nas primeiras 10 linhas da planilha.")
+        st.warning("O formato do cabeçalho mudou. Não encontrei a linha de datas (ex: 01/02) nas primeiras 10 linhas da planilha.")
         return
 
     datas, values_no, values_out = [], [], []
@@ -282,14 +283,11 @@ def render_analise_entrega():
             values_no.append(pd.to_numeric(row_no.iloc[c], errors='coerce'))
             values_out.append(pd.to_numeric(row_out.iloc[c], errors='coerce'))
 
-    # DADOS REAIS DE QUANTIDADE AQUI
     pedidos_df = pd.DataFrame({'Data': pd.to_datetime(datas).normalize(), 'pedidos_no_prazo': values_no, 'pedidos_fora_prazo': values_out}).fillna(0).groupby('Data', as_index=False).sum()
     dados = pd.merge(pedidos_df, entregas_df[['Data', 'entregas']], on='Data', how='left').fillna(0)
     
-    # --- Extração Prazo Médio (Apenas Dias) ---
     pasta_solicitacoes = str(_project_root() / "dados" / "solicitacoes")
     sth_plan = load_historical_sth_data(pasta_solicitacoes)
-    tem_prazo = False
     
     if not sth_plan.empty:
         sth_plan = sth_plan.dropna(subset=['DT RECEBIMENTO', 'INICIO', 'FIM'])
@@ -304,96 +302,53 @@ def render_analise_entrega():
                 try:
                     if 0 <= (row['FIM'] - row['INICIO']).days <= 120:  
                         for d in pd.date_range(row['INICIO'], row['FIM']):
-                            prazo_dias = (d - row['DT RECEBIMENTO']).days
-                            categoria = 'No Prazo' if prazo_dias >= 10 else 'Fora do Prazo'
-                            lead_times.append({'Data': d.normalize(), 'Prazo': prazo_dias, 'Categoria': categoria})
+                            lead_times.append({'Data': d.normalize(), 'Prazo': (d - row['DT RECEBIMENTO']).days})
                 except: pass
         
         if lead_times:
-            tem_prazo = True
             df_lead = pd.DataFrame(lead_times)
             df_lead['Critico'] = df_lead['Prazo'] < 3
-            
-            # Textos Globais
-            agrup_geral = df_lead.groupby('Data').agg(Prazo_Medio=('Prazo', 'mean'), Total=('Prazo', 'count'), Criticos=('Critico', 'sum')).reset_index()
-            agrup_geral['Pct_Critico'] = (agrup_geral['Criticos'] / agrup_geral['Total']) * 100
-            dados = pd.merge(dados, agrup_geral[['Data', 'Prazo_Medio', 'Pct_Critico']], on='Data', how='left')
-
-            # Extrair APENAS a Média de Dias (As quantidades puxamos direto do HISTOGRAMA)
-            lead_pivot = df_lead.pivot_table(index='Data', columns='Categoria', values='Prazo', aggfunc='mean').reset_index()
-            if 'No Prazo' in lead_pivot.columns:
-                lead_pivot = lead_pivot.rename(columns={'No Prazo': 'Mean_No_Prazo'})
-            if 'Fora do Prazo' in lead_pivot.columns:
-                lead_pivot = lead_pivot.rename(columns={'Fora do Prazo': 'Mean_Fora_Prazo'})
-                
-            dados = pd.merge(dados, lead_pivot, on='Data', how='left')
+            agrupado_lead = df_lead.groupby('Data').agg(Prazo_Medio=('Prazo', 'mean'), Total=('Prazo', 'count'), Criticos=('Critico', 'sum')).reset_index()
+            agrupado_lead['Pct_Critico'] = (agrupado_lead['Criticos'] / agrupado_lead['Total']) * 100
+            dados = pd.merge(dados, agrupado_lead[['Data', 'Prazo_Medio', 'Pct_Critico']], on='Data', how='left')
+    else:
+        st.info(f"Aviso: Não encontrei planilhas com a aba STH_PLANEJAMENTO na pasta '{pasta_solicitacoes}'.")
 
     if len(dados) == 0:
         st.warning("Sem dados no período.")
         return
     
-    period_start, period_end = dados['Data'].min(), dados['Data'].max()
-    str_start, str_end = period_start.strftime('%d/%m'), period_end.strftime('%d/%m')
-    
-    # -------------------------------------------------------------
-    # GRÁFICO 1: VOLUME DE PEDIDOS VS ENTREGAS
-    # -------------------------------------------------------------
     max_y = float(dados[['pedidos_no_prazo', 'entregas', 'pedidos_fora_prazo']].max().max())
     y_max = max_y * (1.18 if max_y > 0 else 10)
 
-    fig1 = go.Figure()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dados['Data'], y=dados['pedidos_no_prazo'], mode='lines+markers+text', name='Pedidos no Prazo', line=dict(color='#2266ee', width=2), marker=dict(size=6, color='#2266ee'), text=[f"{int(round(v))}" for v in dados['pedidos_no_prazo']], textposition='top center', textfont=dict(size=11, color='#2266ee'), cliponaxis=False))
+    fig.add_trace(go.Scatter(x=dados['Data'], y=dados['entregas'], mode='lines+markers+text', name='Entregas', line=dict(color='#23B26D', width=2), marker=dict(size=6, color='#23B26D'), text=[f"{int(round(v))}" for v in dados['entregas']], textposition='bottom center', textfont=dict(size=11, color='#23B26D'), cliponaxis=False))
+    fig.add_trace(go.Scatter(x=dados['Data'], y=dados['pedidos_fora_prazo'], mode='lines+markers+text', name='Fora do Prazo', line=dict(color='#f65054', width=2, dash='dash'), marker=dict(size=6, color='#f65054'), text=[f"{int(round(v))}" for v in dados['pedidos_fora_prazo']], textposition='top right', textfont=dict(size=11, color='#f65054'), cliponaxis=False))
     
-    fig1.add_trace(go.Scatter(x=dados['Data'], y=dados['pedidos_no_prazo'], mode='lines+markers+text', name='Pedidos no Prazo', line=dict(color='#2266ee', width=2), marker=dict(size=6, color='#2266ee'), text=[f"{int(round(v))}" if v > 0 else "" for v in dados['pedidos_no_prazo']], textposition='top center', textfont=dict(size=11, color='#2266ee'), cliponaxis=False))
-    
-    fig1.add_trace(go.Scatter(x=dados['Data'], y=dados['entregas'], mode='lines+markers+text', name='Entregas', line=dict(color='#23B26D', width=2), marker=dict(size=6, color='#23B26D'), text=[f"{int(round(v))}" if v > 0 else "" for v in dados['entregas']], textposition='bottom center', textfont=dict(size=11, color='#23B26D'), cliponaxis=False))
-    
-    fig1.add_trace(go.Scatter(x=dados['Data'], y=dados['pedidos_fora_prazo'], mode='lines+markers+text', name='Fora do Prazo', line=dict(color='#f65054', width=2, dash='dash'), marker=dict(size=6, color='#f65054'), text=[f"{int(round(v))}" if v > 0 else "" for v in dados['pedidos_fora_prazo']], textposition='top center', textfont=dict(size=11, color='#f65054'), cliponaxis=False))
-    
-    fig1.update_layout(xaxis=dict(tickformat='%d/%m', showgrid=False, dtick=86400000.0), yaxis=dict(title='Qtd. Diárias', range=[0, y_max], showgrid=True, gridcolor='rgba(120,140,170,0.22)'), legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center', font=dict(size=11)), height=450, margin=dict(l=18, r=18, t=35, b=65), hovermode='x unified', plot_bgcolor='#fff', paper_bgcolor='#fff')
+    tem_prazo = 'Prazo_Medio' in dados.columns and not dados['Prazo_Medio'].isna().all()
+    if tem_prazo:
+        fig.add_trace(go.Scatter(x=dados['Data'], y=dados['Prazo_Medio'], mode='lines+markers+text', name='Prazo Médio (Dias)', yaxis='y2', line=dict(color='#9b1de9', width=2, dash='dot'), marker=dict(size=6, color='#9b1de9', symbol='diamond'), text=[f"{v:.1f}d" if pd.notna(v) else "" for v in dados['Prazo_Medio']], textposition='bottom right', textfont=dict(size=10, color='#9b1de9'), cliponaxis=False))
+        max_y_lead = dados['Prazo_Medio'].max()
+    else: max_y_lead = 10
 
-    st.markdown(f"<div class='graph-container'><div style='font-weight:700; font-size:1.1em; color:#1a1a1a; margin-bottom:10px;'>Pedidos x Entregas ({str_start} a {str_end})</div>", unsafe_allow_html=True)
-    st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False})
+    # A correção está aqui: title_font com underline (aceito pelas bibliotecas mais novas)
+    fig.update_layout(xaxis=dict(tickformat='%d/%m', showgrid=False, dtick=86400000.0), yaxis=dict(title='Qtd. Diárias', range=[0, y_max], showgrid=True, gridcolor='rgba(120,140,170,0.22)'), legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center', font=dict(size=11)), height=550, margin=dict(l=18, r=18, t=35, b=65), hovermode='x unified', plot_bgcolor='#fff', paper_bgcolor='#fff')
+    if tem_prazo: fig.update_layout(yaxis2=dict(title='Prazo Lead Time (Dias)', tickfont=dict(size=10, color='#9b1de9'), title_font=dict(size=12, color='#9b1de9'), overlaying='y', side='right', range=[0, max_y_lead * 1.3] if max_y_lead > 0 else [0, 10], showgrid=False, zeroline=False))
+
+    period_start, period_end = dados['Data'].min(), dados['Data'].max()
+    st.markdown(f"<div class='graph-container'><div style='font-weight:700; font-size:1.1em; color:#1a1a1a; margin-bottom:10px;'>Pedidos x Entregas x Prazo de Contratação ({period_start.strftime('%d/%m')} a {period_end.strftime('%d/%m')})</div>", unsafe_allow_html=True)
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # -------------------------------------------------------------
-    # GRÁFICO 2: LEAD TIME COM RÓTULOS REAIS (SEM A PALAVRA "VAGAS")
-    # -------------------------------------------------------------
-    if tem_prazo:
-        fig2 = go.Figure()
-        
-        # O PULO DO GATO: Mesclando a Quantidade Exata do Histograma com a Média do SLA
-        if 'Mean_No_Prazo' in dados.columns and not dados['Mean_No_Prazo'].isna().all():
-            texto_no_prazo = [f"<b>{int(qtd)}</b><br>{v:.1f}d" if pd.notna(v) and qtd > 0 else "" for qtd, v in zip(dados['pedidos_no_prazo'], dados['Mean_No_Prazo'])]
-            fig2.add_trace(go.Scatter(x=dados['Data'], y=dados['Mean_No_Prazo'], mode='lines+markers+text', name='Prazo - Regra SLA', line=dict(color='#23b26d', width=3), marker=dict(size=8, color='#23b26d'), text=texto_no_prazo, textposition='top center', textfont=dict(size=10, color='#23b26d'), cliponaxis=False))
-        
-        if 'Mean_Fora_Prazo' in dados.columns and not dados['Mean_Fora_Prazo'].isna().all():
-            texto_fora_prazo = [f"<b>{int(qtd)}</b><br>{v:.1f}d" if pd.notna(v) and qtd > 0 else "" for qtd, v in zip(dados['pedidos_fora_prazo'], dados['Mean_Fora_Prazo'])]
-            fig2.add_trace(go.Scatter(x=dados['Data'], y=dados['Mean_Fora_Prazo'], mode='lines+markers+text', name='Prazo - Quebra SLA', line=dict(color='#ff7927', width=3), marker=dict(size=8, color='#ff7927'), text=texto_fora_prazo, textposition='bottom center', textfont=dict(size=10, color='#ff7927'), cliponaxis=False))
-            
-        fig2.add_hline(y=10, line_dash="dash", line_color="#1a1a1a", annotation_text="Meta SLA (10 dias)", annotation_position="top left", annotation_font_size=11)
-
-        cols_lead = [c for c in ['Mean_No_Prazo', 'Mean_Fora_Prazo'] if c in dados.columns]
-        max_y_lead = dados[cols_lead].max().max() if cols_lead else 15
-        max_y_lead = 15 if pd.isna(max_y_lead) else max_y_lead
-
-        fig2.update_layout(xaxis=dict(tickformat='%d/%m', showgrid=False, dtick=86400000.0), yaxis=dict(title='Dias de Antecedência', range=[0, max(12, max_y_lead * 1.35)], showgrid=True, gridcolor='rgba(120,140,170,0.22)'), legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center', font=dict(size=11)), height=350, margin=dict(l=18, r=18, t=35, b=65), hovermode='x unified', plot_bgcolor='#fff', paper_bgcolor='#fff')
-
-        st.markdown(f"<div class='graph-container' style='margin-top:20px;'><div style='font-weight:700; font-size:1.1em; color:#1a1a1a; margin-bottom:10px;'>Prazo para contratação - {str_start} a {str_end}</div>", unsafe_allow_html=True)
-        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # -------------------------------------------------------------
-    # ANÁLISE ESCRITA (Insights)
-    # -------------------------------------------------------------
     avg_pedidos, avg_entregas, avg_fora = dados['pedidos_no_prazo'].mean(), dados['entregas'].mean(), dados['pedidos_fora_prazo'].mean()
     analise = f"<ul><li><b>Destaque Operacional:</b> Média de <b>{avg_pedidos:.0f}</b> no prazo e <b>{avg_fora:.0f}</b> fora do prazo/dia.</li><li><b>Termômetro SLA:</b> Saldo médio foi de <b>{(avg_entregas - avg_pedidos):.0f}</b>/dia.</li>"
-    
     if tem_prazo:
         avg_lead, avg_crit = dados['Prazo_Medio'].mean(), dados['Pct_Critico'].mean()
         idx_crit = dados['Prazo_Medio'].idxmin()
         if pd.notna(idx_crit):
             dia_crit, val_crit = dados.loc[idx_crit, 'Data'].strftime('%d/%m'), dados.loc[idx_crit, 'Prazo_Medio']
-            analise += f"<li><b>SLA Real Global (Misto):</b> Ao somar pedidos bons e ruins, a equipe teve <b>{avg_lead:.1f} dias reais</b> de antecedência média para trabalhar.</li><li><b>Risco e Sobrecarga (< 3 dias):</b> O índice de requisições críticas representou <b>{avg_crit:.1f}%</b> de todas as vagas diárias. O pior pico crítico ocorreu no dia <b>{dia_crit}</b>, com média geral de apenas <b>{val_crit:.1f} dias</b> de manobra.</li>"
+            analise += f"<li><b>SLA Real (Lead Time):</b> <b>{avg_lead:.1f} dias reais</b> de antecedência média para recrutamento das vagas.</li><li><b>Risco e Sobrecarga (< 3 dias):</b> O índice de requisições críticas representou <b>{avg_crit:.1f}%</b> das vagas diárias. O pico crítico ocorreu no dia <b>{dia_crit}</b>, onde o prazo médio despencou para apenas <b>{val_crit:.1f} dias</b> de manobra.</li>"
     st.markdown(f"<div class='obs-box'>{analise}</ul></div>", unsafe_allow_html=True)
 
 # ---- Função de Roteamento de Abas ----
