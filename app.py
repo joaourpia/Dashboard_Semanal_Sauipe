@@ -87,7 +87,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- Navegação de Abas ---
-tab_names = ["Visão Geral", "Análise SLA", "Diárias", "Histórico", "Pesquisa Temporada", "Análise Entrega"]
+tab_names = ["Visão Geral", "Análise SLA", "Diárias", "Histórico", "Análise Entrega"]
 if "current_tab" not in st.session_state:
     st.session_state.current_tab = tab_names[0]
 
@@ -106,7 +106,7 @@ def _project_root() -> Path:
 def _safe_data_path(filename: str) -> Path: 
     return _project_root() / "dados" / filename
 
-# --- Funções de Renderização das Abas Antigas ---
+# --- Funções de Renderização das Abas ---
 def render_visao_geral():
     try:
         sla = pd.read_csv(_safe_data_path('SLA.csv'), sep=';', decimal=',', encoding='latin1')
@@ -114,22 +114,25 @@ def render_visao_geral():
         sla_percent = sla['taxa'].iloc[0] * 100
         diaria_val = pedidos['Taxa'].iloc[0]
         diaria_percent = float(str(diaria_val).replace(',', '.').replace('%','')) if '%' in str(diaria_val) else float(diaria_val) * 100
+        
         st.markdown(f"""<div class="kpi-row">
           <div class="kpi-card kpi-blue"><span class="kpi-title">Total de Pedidos</span><span class="kpi-val">{sla['Solicitado'].iloc[0]}</span></div>
           <div class="kpi-card kpi-green"><span class="kpi-title">Taxa SLA</span><span class="kpi-val">{sla_percent:.1f}%</span></div>
           <div class="kpi-card kpi-purple"><span class="kpi-title">Diárias Entregues</span><span class="kpi-val">{pedidos['Entregue'].iloc[0]}</span></div>
           <div class="kpi-card kpi-orange"><span class="kpi-title">Taxa Diárias</span><span class="kpi-val">{diaria_percent:.2f}%</span></div>
         </div>""", unsafe_allow_html=True)
+        
         col_pie, col_bar = st.columns(2, gap="medium")
         with col_pie:
-            st.markdown('<div class="graph-container"><div class="graph-title">Desempenho SLA - 16 a 22/02</div><div class="graph-content">', unsafe_allow_html=True)
+            st.markdown('<div class="graph-container"><div class="graph-title">Desempenho SLA - Atual</div><div class="graph-content">', unsafe_allow_html=True)
             fig_pie = px.pie(values=[sla['No_prazo'].iloc[0], sla['Fora_prazo'].iloc[0]], names=["No Prazo", "Fora do Prazo"], hole=0.40, color_discrete_sequence=['#2266ee','#f65054'])
             fig_pie.update_traces(textinfo="percent", textposition="inside", textfont=dict(size=14, color="#ffffff"), marker=dict(line=dict(color="#ffffff", width=2)), pull=[0.02,0.02])
             fig_pie.update_layout(showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5, font=dict(size=10,color="#1a1a1a")), margin=dict(l=5,r=5,t=5,b=5), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=180)
             st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar":False})
             st.markdown('</div></div>', unsafe_allow_html=True)
+            
         with col_bar:
-            st.markdown('<div class="graph-container"><div class="graph-title">Diárias - 16 a 22/02</div><div class="graph-content">', unsafe_allow_html=True)
+            st.markdown('<div class="graph-container"><div class="graph-title">Diárias - Atual</div><div class="graph-content">', unsafe_allow_html=True)
             solicitadas, entregues = pedidos.Solicitado.iloc[0], pedidos.Entregue.iloc[0]
             saldo = entregues - solicitadas
             comp_df = pd.DataFrame({"Tipo":["Solicitadas","Entregues"],"Qtd":[solicitadas,entregues]})
@@ -137,25 +140,86 @@ def render_visao_geral():
             fig_bar.update_traces(texttemplate='<b>%{y}</b>', textposition='inside', textfont=dict(size=14, color="#fff"))
             fig_bar.update_layout(showlegend=False, xaxis=dict(title="", tickfont=dict(size=11, color="#1a1a1a")), yaxis=dict(title="", showticklabels=True, tickfont=dict(size=9, color="#1a1a1a"), range=[0,max(solicitadas,entregues)*1.15]), margin=dict(l=12,r=12,t=8,b=8), height=150, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar":False})
-            st.markdown(f"""<div class='diarias-card-sucesso' style='margin-top:8px;'>✅ Não superamos a meta! Entregamos {saldo} diárias a menos que o solicitado ({diaria_percent:.2f}%)</div></div></div>""", unsafe_allow_html=True)
-        st.markdown("""<div class="obs-box"><b>Observações Importantes - 16 a 22/02/2026</b><ul><li>SLA: 108,5% no periodo de 16 a 22/02 (detalhes na aba SLA). Volume: diárias entregues 19,13% acima do solicitado (detalhes na aba Diárias). Importante ressaltar que esses dados estão sendo calculados somente com relação aos pedidos dentro do prazo da SLA de 10 dias</li></ul></div>""", unsafe_allow_html=True)
+            
+            # Lógica Automática do Card Menor
+            if saldo >= 0:
+                texto_bar = f"✅ Superamos a meta! Entregamos {saldo} diárias a mais que o solicitado ({diaria_percent:.2f}%)"
+                estilo_bar = "background:#eaffee; color:#178655; border-left-color:#19bb62;"
+            else:
+                texto_bar = f"⚠️ Desempenho abaixo. Entregamos {abs(saldo)} diárias a menos que o solicitado ({diaria_percent:.2f}%)"
+                estilo_bar = "background:#fff0f0; color:#a31a1a; border-left-color:#d62828;"
+                
+            st.markdown(f"<div class='diarias-card-sucesso' style='margin-top:8px; {estilo_bar}'>{texto_bar}</div></div></div>", unsafe_allow_html=True)
+
+        # Lógica Automática da Caixa de Observações
+        status_vol = "acima" if diaria_percent >= 100 else "abaixo"
+        diff_vol = abs(diaria_percent - 100)
+        
+        st.markdown(f"""
+        <div class="obs-box"><b>Observações Importantes</b>
+            <ul>
+                <li><b>SLA:</b> A taxa de entregas no prazo atingiu <b>{sla_percent:.1f}%</b> no período avaliado.</li>
+                <li><b>Volume Geral:</b> O total de diárias entregues ficou <b>{diff_vol:.2f}% {status_vol}</b> do volume solicitado.</li>
+                <li><i>Atenção: Estes dados de volume de SLA consideram apenas a performance sobre os pedidos que respeitaram a antecedência mínima contratual de 10 dias.</i></li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     except Exception as e: st.warning(f"Erro Visão Geral: {e}")
 
 def render_analise_sla():
     try:
         sla = pd.read_csv(_safe_data_path('SLA.csv'), sep=';', decimal=',', encoding='latin1')
-        total, dentro, fora = int(sla['Solicitado'].iloc[0]), int(sla['No_prazo'].iloc[0]), int(sla['Fora_prazo'].iloc[0])
-        perc_dentro, perc_fora = dentro/total*100, fora/total*100
+        total = int(sla['Solicitado'].iloc[0])
+        dentro = int(sla['No_prazo'].iloc[0])
+        fora = int(sla['Fora_prazo'].iloc[0])
+        
+        perc_dentro = (dentro / total * 100) if total > 0 else 0
+        perc_fora = (fora / total * 100) if total > 0 else 0
+        
+        # Trava visual do Gauge em 100% para não quebrar o layout, mas o texto dirá a verdade.
+        gauge_val = min(perc_dentro, 100)
+
         st.markdown(f"""<div class="kpi-row">
           <div class="kpi-card kpi-blue"><span class="kpi-title">Total de Solicitações</span><span class="kpi-val">{total}</span></div>
           <div class="kpi-card kpi-green"><span class="kpi-title">Dentro do Prazo</span><span class="kpi-val">{dentro}</span><span style="font-size:0.92em;color:#e9ffe1;">{perc_dentro:.2f}% do total</span></div>
           <div class="kpi-card kpi-orange"><span class="kpi-title">Fora do Prazo</span><span class="kpi-val">{fora}</span><span style="font-size:0.92em;color:#fffbe5;">{perc_fora:.2f}% do total</span></div>
         </div>""", unsafe_allow_html=True)
-        fig = go.Figure(go.Indicator(mode="gauge+number+delta", value=perc_dentro, delta={'reference':100,'increasing':{'color':'#ff7927'},'decreasing':{'color':'#23B26D'}}, number={'suffix':' %','font':{'size':32}}, title={'text':'SLA Cumprido (%)','font':{'size':17}}, gauge={'axis':{'range':[0,100],'tickwidth':2},'bar':{'color':'#23B26D'},'bgcolor':'#eaeaee','steps':[{'range':[0,perc_dentro],'color':'#23B26D'},{'range':[perc_dentro,100],'color':'#ffebdf'}],'threshold':{'line':{'color':'#FF7927','width':4},'thickness':0.7,'value':perc_dentro}}))
+        
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number+delta", 
+            value=gauge_val, 
+            delta={'reference':100,'increasing':{'color':'#ff7927'},'decreasing':{'color':'#23B26D'}}, 
+            number={'suffix':' %','font':{'size':32}}, 
+            title={'text':'SLA Cumprido (%)','font':{'size':17}}, 
+            gauge={
+                'axis':{'range':[0,100],'tickwidth':2},
+                'bar':{'color':'#23B26D'},
+                'bgcolor':'#eaeaee',
+                'steps':[{'range':[0,gauge_val],'color':'#23B26D'},{'range':[gauge_val,100],'color':'#ffebdf'}],
+                'threshold':{'line':{'color':'#FF7927','width':4},'thickness':0.7,'value':100}
+            }
+        ))
         fig.update_layout(height=220, margin=dict(l=22,r=22,t=22,b=20), paper_bgcolor="#f6f9fd", font=dict(size=15))
+        
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
-        st.markdown('</div><div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;"><b>Contexto SLA</b><br><ul><li><b>Pedidos fora do prazo:</b> O total entregue de SLA foi de 108,46%, considerando os pedidos dentro do prazo.</li></ul></div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Lógica Automática da Caixa de Contexto
+        texto_sla = f"A taxa de entregas dentro do prazo em relação ao total solicitado foi de <b>{perc_dentro:.2f}%</b>."
+        if perc_dentro > 100:
+            texto_sla += f" O indicador matemático ultrapassou os 100% pois a operação realizou <i>over-delivery</i>, entregando <b>{dentro - total}</b> diárias a mais do que a base originalmente solicitada no prazo."
+
+        st.markdown(f"""
+        <div class="obs-box" style="background:#e8f1fd;border-left:5px solid #5aa7db;color:#164976;font-size:1.04em;margin-top:10px;font-weight:500;">
+            <b>Contexto SLA</b><br>
+            <ul>
+                <li>{texto_sla}</li>
+                <li>Foram registradas <b>{fora}</b> diárias tratadas fora do prazo de planejamento ({perc_fora:.2f}% do volume base).</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
     except Exception as e: st.warning(f"Erro SLA: {e}")
 
 def render_diarias():
@@ -164,13 +228,31 @@ def render_diarias():
         solicitadas, entregues = int(pedidos.Solicitado.iloc[0]), int(pedidos.Entregue.iloc[0])
         saldo = entregues - solicitadas
         taxa = float(str(pedidos['Taxa'].iloc[0]).replace(',', '.').replace('%','')) if '%' in str(pedidos['Taxa'].iloc[0]) else float(pedidos['Taxa'].iloc[0]) * 100
+        
         st.markdown(f"""<div class="diarias-kpi-row"><div class="diarias-kpi-card diarias-kpi-blue"><span class="diarias-kpi-title">Solicitadas</span><span class="diarias-kpi-val">{solicitadas}</span></div><div class="diarias-kpi-card diarias-kpi-green"><span class="diarias-kpi-title">Entregues</span><span class="diarias-kpi-val">{entregues}</span></div><div class="diarias-kpi-card diarias-kpi-purple"><span class="diarias-kpi-title">Taxa de Atendimento</span><span class="diarias-kpi-val">{taxa:.2f}%</span></div></div>""", unsafe_allow_html=True)
+        
         fig_barras = go.Figure()
-        fig_barras.add_trace(go.Bar(x=["fevereiro"], y=[solicitadas], name="Solicitadas", marker=dict(color="#FFA500"), text=[solicitadas], textposition="outside"))
-        fig_barras.add_trace(go.Bar(x=["fevereiro"], y=[entregues], name="Entregues", marker=dict(color="#23B26D"), text=[entregues], textposition="outside"))
+        fig_barras.add_trace(go.Bar(x=["Período Atual"], y=[solicitadas], name="Solicitadas", marker=dict(color="#FFA500"), text=[solicitadas], textposition="outside"))
+        fig_barras.add_trace(go.Bar(x=["Período Atual"], y=[entregues], name="Entregues", marker=dict(color="#23B26D"), text=[entregues], textposition="outside"))
         fig_barras.update_layout(barmode='group', yaxis=dict(range=[0,max(solicitadas,entregues)*1.15]), height=310, margin=dict(t=30,b=30,l=28,r=28), legend=dict(orientation='h', x=0.5, y=-0.20, xanchor='center'), plot_bgcolor="#fff", paper_bgcolor="#fff")
         st.plotly_chart(fig_barras, use_container_width=True, config={"displayModeBar": False})
-        st.markdown(f"""<div class="diarias-card-sucesso"><b>Desempenho abaixo</b><br> No perioso de 16 a 22/02/26, não superamos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em uma diferença negativa de <b style='color:#12bb26;'>{saldo} diárias</b>.<br> Taxa de atendimento: <b>{taxa:.2f}%</b>.</div>""", unsafe_allow_html=True)
+        
+        # Lógica Automática da Mensagem de Rodapé
+        if saldo >= 0:
+            titulo = "✅ Desempenho Superado"
+            texto = f"Superamos as expectativas da operação ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em um saldo positivo de <b style='color:#178655;'>{saldo} diárias</b>."
+            estilo = "background:#eaffee; color:#178655; border-left-color:#19bb62;"
+        else:
+            titulo = "⚠️ Desempenho Abaixo da Meta"
+            texto = f"Não atingimos as expectativas ao entregar <b>{entregues} diárias</b>, quando foram solicitadas <b>{solicitadas}</b>, resultando em um déficit de <b style='color:#d62828;'>{abs(saldo)} diárias</b>."
+            estilo = "background:#fff0f0; color:#a31a1a; border-left-color:#d62828;"
+
+        st.markdown(f"""
+        <div class="diarias-card-sucesso" style="{estilo}">
+            <b>{titulo}</b><br>{texto}<br>
+            Taxa de atendimento global: <b>{taxa:.2f}%</b>.
+        </div>
+        """, unsafe_allow_html=True)
     except Exception as e: st.warning(f"Erro Diárias: {e}")
 
 def render_historico():
@@ -180,10 +262,16 @@ def render_historico():
         sla_hist['Taxa'] = sla_hist['Taxa'].map(lambda x: float(str(x).replace(',', '.').strip()))
         sla_hist['No Prazo (%)'] = sla_hist['Taxa'] * 100
         sla_hist['Fora do Prazo (%)'] = (1 - sla_hist['Taxa']) * 100
-        st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas (16 a 22/02/2026)</div></div>""", unsafe_allow_html=True)
+        
+        st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Prazos de Entregas</div></div>""", unsafe_allow_html=True)
+        
+        # Correção da Sobreposição: Ocultar texto se a fatia for menor que 4%
+        text_no_prazo = [f"{v:.1f}%" if v >= 4 else "" for v in sla_hist['No Prazo (%)']]
+        text_fora_prazo = [f"{v:.1f}%" if v >= 4 else "" for v in sla_hist['Fora do Prazo (%)']]
+
         fig1 = go.Figure(data=[
-            go.Bar(name='No Prazo', x=sla_hist['Mes'], y=sla_hist['No Prazo (%)'], marker_color='#2266ee', text=[f"{v:.1f}%" for v in sla_hist['No Prazo (%)']], textposition='inside'),
-            go.Bar(name='Fora do Prazo', x=sla_hist['Mes'], y=sla_hist['Fora do Prazo (%)'], marker_color='#f65054', text=[f"{v:.1f}%" for v in sla_hist['Fora do Prazo (%)']], textposition='inside')
+            go.Bar(name='No Prazo', x=sla_hist['Mes'], y=sla_hist['No Prazo (%)'], marker_color='#2266ee', text=text_no_prazo, textposition='auto'),
+            go.Bar(name='Fora do Prazo', x=sla_hist['Mes'], y=sla_hist['Fora do Prazo (%)'], marker_color='#f65054', text=text_fora_prazo, textposition='auto')
         ])
         fig1.update_layout(barmode='stack', height=350, margin=dict(l=20,r=20,t=80,b=38), legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center'), plot_bgcolor='#fff')
         st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar':False})
@@ -193,7 +281,9 @@ def render_historico():
         ent_hist['Solicitadas'] = ent_hist['Solicitadas'].astype(int)
         ent_hist['Entregues'] = ent_hist['Entregues'].astype(int)
         ent_hist['Taxa_%'] = ent_hist['Taxa'].map(lambda x: float(str(x).replace(',', '.'))) * 100
-        st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues (16 a 22/02/2026)</div></div>""", unsafe_allow_html=True)
+        
+        st.markdown("""<div style="background:#fff;border-radius:16px;padding:28px 35px 26px 35px;margin-bottom:28px;box-shadow:0 1px 8px #0001;"><div style="font-weight:800;font-size:1.20em;margin-bottom:12px;">Histórico de Diárias Entregues</div></div>""", unsafe_allow_html=True)
+        
         fig2 = go.Figure()
         fig2.add_trace(go.Bar(x=ent_hist['Mês'], y=ent_hist['Solicitadas'], name='Solicitadas', marker_color='#FFA500', text=ent_hist['Solicitadas'], textposition='outside'))
         fig2.add_trace(go.Bar(x=ent_hist['Mês'], y=ent_hist['Entregues'], name='Entregues', marker_color='#23B26D', text=ent_hist['Entregues'], textposition='outside'))
@@ -202,15 +292,7 @@ def render_historico():
         st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar':False})
     except Exception as e: st.warning(f"Erro Histórico: {e}")
 
-def render_pesquisa_temporada():
-    st.markdown("""<div style="background:#f4faff;border-radius:8px;padding:16px;margin-bottom:12px;"><p style="margin:0;font-size:0.92em;">Resultados da pesquisa de acompanhamento com temporários. Foram avaliados <b>61 ativos</b> e <b>13 desligados</b>.</p></div>""", unsafe_allow_html=True)
-    df_recepcao = pd.DataFrame({"Nota":["1","2","3","4","5"], "Quantidade":[1,2,10,6,42]})
-    fig_rec = px.bar(df_recepcao, x="Nota", y="Quantidade", color="Nota", color_discrete_sequence=['#f65054','#ffa500','#ffd966','#ac7ef4','#23b26d'], text="Quantidade")
-    fig_rec.update_traces(texttemplate="%{text}", textposition="outside")
-    fig_rec.update_layout(showlegend=False, title_text="Recepção no Primeiro Dia", height=300)
-    st.plotly_chart(fig_rec, use_container_width=True, config={"displayModeBar":False})
-
-# --- ANÁLISE ENTREGA (COM GRÁFICOS E TEXTOS AVANÇADOS) ---
+# --- ANÁLISE ENTREGA ---
 @st.cache_data(ttl=3600)
 def load_historical_sth_data(pasta_path):
     arquivos = glob.glob(os.path.join(pasta_path, '*.xlsx'))
@@ -319,7 +401,7 @@ def render_analise_entrega():
             agrup_geral['Pct_Critico'] = (agrup_geral['Criticos'] / agrup_geral['Total']) * 100
             dados = pd.merge(dados, agrup_geral[['Data', 'Prazo_Medio', 'Pct_Critico']], on='Data', how='left')
 
-            # Extrair APENAS a Média de Dias (As quantidades puxamos direto do HISTOGRAMA)
+            # Extrair APENAS a Média de Dias
             lead_pivot = df_lead.pivot_table(index='Data', columns='Categoria', values='Prazo', aggfunc='mean').reset_index()
             if 'No Prazo' in lead_pivot.columns:
                 lead_pivot = lead_pivot.rename(columns={'No Prazo': 'Mean_No_Prazo'})
@@ -356,12 +438,11 @@ def render_analise_entrega():
     st.markdown('</div>', unsafe_allow_html=True)
 
     # -------------------------------------------------------------
-    # GRÁFICO 2: LEAD TIME COM RÓTULOS REAIS (SEM A PALAVRA "VAGAS")
+    # GRÁFICO 2: LEAD TIME 
     # -------------------------------------------------------------
     if tem_prazo:
         fig2 = go.Figure()
         
-        # O PULO DO GATO: Mesclando a Quantidade Exata do Histograma com a Média do SLA
         if 'Mean_No_Prazo' in dados.columns and not dados['Mean_No_Prazo'].isna().all():
             texto_no_prazo = [f"<b>{int(qtd)}</b><br>{v:.1f}d" if pd.notna(v) and qtd > 0 else "" for qtd, v in zip(dados['pedidos_no_prazo'], dados['Mean_No_Prazo'])]
             fig2.add_trace(go.Scatter(x=dados['Data'], y=dados['Mean_No_Prazo'], mode='lines+markers+text', name='Prazo - Regra SLA', line=dict(color='#23b26d', width=3), marker=dict(size=8, color='#23b26d'), text=texto_no_prazo, textposition='top center', textfont=dict(size=10, color='#23b26d'), cliponaxis=False))
@@ -383,18 +464,51 @@ def render_analise_entrega():
         st.markdown('</div>', unsafe_allow_html=True)
 
     # -------------------------------------------------------------
-    # ANÁLISE ESCRITA (Insights)
+    # ANÁLISE ESCRITA (Insights Estratégicos)
     # -------------------------------------------------------------
-    avg_pedidos, avg_entregas, avg_fora = dados['pedidos_no_prazo'].mean(), dados['entregas'].mean(), dados['pedidos_fora_prazo'].mean()
-    analise = f"<ul><li><b>Destaque Operacional:</b> Média de <b>{avg_pedidos:.0f}</b> no prazo e <b>{avg_fora:.0f}</b> fora do prazo/dia.</li><li><b>Termômetro SLA:</b> Saldo médio foi de <b>{(avg_entregas - avg_pedidos):.0f}</b>/dia.</li>"
+    total_pedidos_no_prazo = dados['pedidos_no_prazo'].sum()
+    total_pedidos_fora = dados['pedidos_fora_prazo'].sum()
+    total_pedidos = total_pedidos_no_prazo + total_pedidos_fora
+    total_entregas = dados['entregas'].sum()
+
+    taxa_atendimento_global = (total_entregas / total_pedidos * 100) if total_pedidos > 0 else 0
+    percentual_fora_prazo = (total_pedidos_fora / total_pedidos * 100) if total_pedidos > 0 else 0
+    saldo_global = total_entregas - total_pedidos
     
+    cor_saldo = "#178655" if saldo_global >= 0 else "#f65054"
+    sinal_saldo = "+" if saldo_global > 0 else ""
+
+    # Calcula o pior dia (maior déficit entre pedidos totais e entregas)
+    dados['saldo_diario'] = dados['entregas'] - (dados['pedidos_no_prazo'] + dados['pedidos_fora_prazo'])
+    pior_dia_idx = dados['saldo_diario'].idxmin()
+    pior_dia_str = ""
+    if pd.notna(pior_dia_idx):
+        pior_dia = dados.loc[pior_dia_idx, 'Data'].strftime('%d/%m')
+        pior_saldo = dados.loc[pior_dia_idx, 'saldo_diario']
+        pior_dia_str = f" O dia de maior estrangulamento operacional foi <b>{pior_dia}</b>, com um déficit de <b>{abs(pior_saldo):.0f} vagas</b> em um único dia."
+
+    analise = f"<ul>"
+    
+    # Ponto 1: Eficácia (Gráfico 1)
+    analise += f"<li><b>Eficácia de Entrega (Volume):</b> Frente a uma demanda total de <b>{total_pedidos:.0f}</b> vagas no período, a operação entregou <b>{total_entregas:.0f}</b>. Isso representa uma taxa de atendimento global de <b>{taxa_atendimento_global:.1f}%</b> (<span style='color:{cor_saldo};font-weight:700;'>Saldo: {sinal_saldo}{saldo_global:.0f} vagas</span>).{pior_dia_str}</li>"
+
+    # Ponto 2: Qualidade da Demanda (Gráfico 1)
+    analise += f"<li><b>Qualidade da Demanda (Alerta):</b> Alarmantes <b>{percentual_fora_prazo:.1f}%</b> de todas as vagas ({total_pedidos_fora:.0f}) entraram como 'Fora do Prazo'. A pressão sobre a operação não reside na capacidade de entrega, mas na grave ausência de planejamento por parte dos solicitantes.</li>"
+
+    # Ponto 3 e 4: Lead Time e Risco (Gráfico 2)
     if tem_prazo:
-        avg_lead, avg_crit = dados['Prazo_Medio'].mean(), dados['Pct_Critico'].mean()
+        avg_lead = dados['Prazo_Medio'].mean()
+        avg_crit = dados['Pct_Critico'].mean()
         idx_crit = dados['Prazo_Medio'].idxmin()
         if pd.notna(idx_crit):
-            dia_crit, val_crit = dados.loc[idx_crit, 'Data'].strftime('%d/%m'), dados.loc[idx_crit, 'Prazo_Medio']
-            analise += f"<li><b>SLA Real Global (Misto):</b> Ao somar pedidos bons e ruins, a equipe teve <b>{avg_lead:.1f} dias reais</b> de antecedência média para trabalhar.</li><li><b>Risco e Sobrecarga (< 3 dias):</b> O índice de requisições críticas representou <b>{avg_crit:.1f}%</b> de todas as vagas diárias. O pior pico crítico ocorreu no dia <b>{dia_crit}</b>, com média geral de apenas <b>{val_crit:.1f} dias</b> de manobra.</li>"
-    st.markdown(f"<div class='obs-box'>{analise}</ul></div>", unsafe_allow_html=True)
+            dia_crit = dados.loc[idx_crit, 'Data'].strftime('%d/%m')
+            val_crit = dados.loc[idx_crit, 'Prazo_Medio']
+            analise += f"<li><b>SLA Real (Misto):</b> Ao misturar os pedidos bem planejados com os urgentes, a equipe teve, em média, apenas <b>{avg_lead:.1f} dias reais</b> de antecedência para captar, triar e contratar.</li>"
+            analise += f"<li><b>Risco Operacional (< 3 dias):</b> <b>{avg_crit:.1f}%</b> de todas as requisições exigiram contratação imediata (críticas). O pior prazo médio ocorreu em <b>{dia_crit}</b>, com média geral de ínfimos <b>{val_crit:.1f} dias</b> de manobra.</li>"
+
+    analise += "</ul>"
+    
+    st.markdown(f"<div class='obs-box' style='font-size: 1.05em; line-height: 1.6;'>{analise}</div>", unsafe_allow_html=True)
 
 # ---- Função de Roteamento de Abas ----
 aba_ativa = st.session_state.current_tab
@@ -407,7 +521,5 @@ elif aba_ativa == "Diárias":
     render_diarias()
 elif aba_ativa == "Histórico":
     render_historico()
-elif aba_ativa == "Pesquisa Temporada":
-    render_pesquisa_temporada()
 elif aba_ativa == "Análise Entrega":
     render_analise_entrega()
