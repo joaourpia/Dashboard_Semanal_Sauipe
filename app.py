@@ -45,7 +45,7 @@ def get_base64_image(image_path):
         with open(image_path, "rb") as img_file: return base64.b64encode(img_file.read()).decode()
     except: return ""
 
-base_dados = Path(r"C:\Users\joaou\OneDrive\Documentos\python\Projetos\Dashboard_Sauipe_acumulado\dados")
+base_dados = Path(__file__).resolve().parent / "dados"
 
 def safe_read_csv(caminho):
     try: return pd.read_csv(caminho, sep=';', decimal=',', encoding='latin1')
